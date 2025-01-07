@@ -35,6 +35,10 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    revokedTokens: {
+        type: [String],
+        default: []
+    },
     otp: {
         type: OTPSchema
     },

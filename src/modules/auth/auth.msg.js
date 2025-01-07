@@ -10,7 +10,9 @@ const AuthMSG = {
     LogoutSuccess: "Logout successful!",
     InvalidRefreshToken: "The provided refresh token is invalid or has expired.",
     RefreshTokenMissing: "Refresh token is missing. Please log in again",
-    TokenRefreshed: "Access token has been successfully refreshed."
+    TokenRefreshed: "Access token has been successfully refreshed.",
+    TokenRevoked: 'The refresh token has been revoked. Please log in again.'
+
 }
 
 module.exports = {

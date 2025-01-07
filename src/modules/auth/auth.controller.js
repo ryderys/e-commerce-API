@@ -82,28 +82,46 @@ class UserAuthController {
     }
 
     async refreshToken(req, res, next){
-        const refreshToken = req.cookies[CookieNames.RefreshToken]
-        if(!refreshToken) throw new httpErrors.Unauthorized(AuthMSG.RefreshTokenMissing)
+        try {
+            const refreshToken = req.cookies[CookieNames.RefreshToken]
+            if(!refreshToken) throw new httpErrors.Unauthorized(AuthMSG.RefreshTokenMissing)
+                
+            // verify the refresh token
+            const decoded = verifyRefreshToken(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+            const user = await UserModel.findById(decoded.id)
+            if(!user) throw new httpErrors.Unauthorized(AuthMSG.UserNotFound)
+    
+            // check if the refresh token is revoked
+            if(user.revokedTokens.includes(refreshToken)){
+                throw new httpErrors.Unauthorized(AuthMSG.TokenRevoked)
+            }
+    
+            const accessToken = signToken.signAccessToken({mobile: decoded.mobile, id: decoded.id})
+            const newRefreshToken = signToken.signRefreshToken({mobile: decoded.mobile, id: decoded.id})
+           
+            this.setToken(res, accessToken, newRefreshToken)
+            return sendResponse(res, StatusCodes.OK, AuthMSG.TokenRefreshed, {accessToken, refreshToken: newRefreshToken})
         
-        const decoded = verifyRefreshToken(refreshToken, process.env.REFRESH_TOKEN_SECRET)
-        const user = await UserModel.findById(decoded.id)
-        if(!user) throw new httpErrors.Unauthorized(AuthMSG.UserNotFound)
-
-        const accessToken = signToken.signAccessToken({mobile: decoded.mobile, id: decoded.id})
-        const newRefreshToken = signToken.signRefreshToken({mobile: decoded.mobile, id: decoded.id})
-       
-        this.setToken(res, accessToken, newRefreshToken)
-        return sendResponse(res, StatusCodes.OK, AuthMSG.TokenRefreshed, {accessToken, refreshToken: newRefreshToken})
-    }
+        } catch (error) {
+            next(error)        
+        }
+       }
 
     async logout(req, res, next){
         try {
             const userId = req.user._id;
             if(!userId) throw new httpErrors.BadRequest(AuthMSG.Login)
-            await UserModel.findByIdAndUpdate(userId, {refreshToken: null})
-            return res.clearCookie(CookieNames.AccessToken)
-                .clearCookie(CookieNames.RefreshToken)
-                .status(StatusCodes.OK)
+            const user = await UserModel.findById(userId)
+            if(!user) throw new httpErrors.BadRequest(AuthMSG.UserNotFound)
+
+            const refreshToken = req.cookies[CookieNames.RefreshToken]
+            if(refreshToken){
+                await this.revokeTokens(userId, refreshToken )
+            }
+            res.clearCookie(CookieNames.AccessToken)
+                .clearCookie(CookieNames.RefreshToken);
+
+            return res.status(StatusCodes.OK)
                 .json({
                     statusCode: StatusCodes.OK,
                     data: {
@@ -131,4 +149,11 @@ class UserAuthController {
             maxAge: 1000 * 60 * 60 * 24 * 7, //7 days
           });
       }
+
+    async revokeTokens(userId, token) {
+        const user = await UserModel.findById(userId)
+        if(!user) throw new httpErrors.BadRequest(AuthMSG.UserNotFound)
+        user.revokedTokens.push(token)
+        await user.save()
+    }
 }
