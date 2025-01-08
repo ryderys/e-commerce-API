@@ -160,3 +160,7 @@ class UserAuthController {
 
     
 }
+
+module.exports = {
+    UserAuthController: new UserAuthController()
+}
