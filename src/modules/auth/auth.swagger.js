@@ -34,7 +34,7 @@
  *              properties:
  *                  statusCode:
  *                      type: number
- *                      example 201
+ *                      example: 201
  *                  data:
  *                      type: object
  *                      properties:

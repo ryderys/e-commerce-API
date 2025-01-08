@@ -1,7 +1,9 @@
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express")
 
-const options = swaggerJsDoc({
+const options = {
+    
+    definition: {
     openapi: "3.0.3",
     info: {
         title: "E-commerce API",
@@ -14,10 +16,12 @@ const options = swaggerJsDoc({
             description: "Development server",
         },
     ],
+},
     apis: [process.cwd() + "/src/modules/**/*.swagger.js"],
-})
+}
+const specs = swaggerJsDoc(options)
 function setupSwagger(app){
-    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(options))
+    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(specs))
 }
 
-module.exports = setupSwagger
+module.exports = {setupSwagger}
