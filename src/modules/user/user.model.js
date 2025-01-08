@@ -28,16 +28,13 @@ const UserSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    refreshToken: {
+    hashedRefreshToken: {
         type: String,
+        default: null
     },
     verifiedMobile: {
         type: Boolean,
         default: false
-    },
-    revokedTokens: {
-        type: [String],
-        default: []
     },
     otp: {
         type: OTPSchema
