@@ -2,6 +2,7 @@ const ProductMsg = {
     ProductCreated: "Product created successfully",
     ProductUpdated: "Product updated successfully",
     ProductDeleted: "Product deleted successfully",
+    ProductDeleteFailed: "failed to delete the product",
     ProductNotFound: "Product not found",
     UserNotFound: "User not found in request. Please log in.",
     InvalidReq: "Invalid Request, no id provided or something is wrong",

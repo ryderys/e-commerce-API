@@ -7,14 +7,18 @@ const path = require("path")
 const { FeaturesModel } = require("../../modules/features/features.model")
 const fs = require("fs").promises;
 
-const sendResponse = (res, statusCode, message, data) => {
-    return res.status(statusCode).json({
+const sendResponse = (res, statusCode, message = null , data = {}) => {
+    const responseData = {
         statusCode,
         data: {
-            message,
             ...data
         }
-    })
+    }
+    if(message){
+        responseData.data.message = message
+    }
+
+    return res.status(statusCode).json(responseData)
 }
 
 // AUTH HELPER FUNCTIONS

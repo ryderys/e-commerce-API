@@ -39,7 +39,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const uploadFile = multer({
+const uploadFileMulter = multer({
   storage,
   fileFilter,
   limits: {
@@ -47,4 +47,4 @@ const uploadFile = multer({
   }
 });
 
-module.exports = { uploadFile };
+module.exports = { uploadFileMulter };
