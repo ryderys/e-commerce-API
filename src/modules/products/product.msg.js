@@ -3,6 +3,7 @@ const ProductMsg = {
     ProductUpdated: "Product updated successfully",
     ProductDeleted: "Product deleted successfully",
     ProductNotFound: "Product not found",
+    
 }
 
 module.exports = {

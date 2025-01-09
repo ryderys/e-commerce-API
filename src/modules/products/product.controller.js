@@ -2,6 +2,8 @@ const autoBind = require("auto-bind");
 const { createProductSchema } = require("../../common/validations/product.validation");
 const { ProductModel } = require("./product.model");
 const { ProductMsg } = require("./product.msg");
+const { getCategoryFeatures, convertFeaturesToObject, validateFeatures, sendResponse } = require("../../common/utils/helperFunctions");
+const { StatusCodes } = require("http-status-codes");
 class ProductController {
     constructor(){
         autoBind(this)
@@ -17,9 +19,9 @@ class ProductController {
             let {title, summary, description, price, tags, count, category, features } = productBody;
             const supplier = req.user._id;
 
-            const categoryFeatures = await this.getCategoryFeatures(category)
-            const categoryFeaturesObject = this.convertFeaturesToObject(categoryFeatures);
-            const validatedFeatures = this.validateFeatures(features, categoryFeaturesObject);
+            const categoryFeatures = await getCategoryFeatures(category)
+            const categoryFeaturesObject = convertFeaturesToObject(categoryFeatures);
+            const validatedFeatures = validateFeatures(features, categoryFeaturesObject);
 
             const product = await ProductModel.create({
                 title,
@@ -33,54 +35,19 @@ class ProductController {
                 features: validatedFeatures,
                 category
             })
-            return res.status(StatusCodes.CREATED).json({
-                statusCode: StatusCodes.CREATED,
-                data: {
-                    message: ProductMsg.ProductCreated,
-                    product
-                }
-            })
+
+            return sendResponse(res, StatusCodes.CREATED, ProductMsg.ProductCreated, {product})
             } catch (error) {
                 await this.deleteUploadedFiles(req?.files)
                 next(error)
             }
     }
 
-    async getCategoryFeatures(categoryId){
-        const features = await FeaturesModel.find({category: categoryId})
-        if(!features){
-            throw new httpError.NotFound("No features found for the selected category")
-        }
-        return features
-    }
+    
 
-    convertFeaturesToObject(features) {
-        return features.reduce((obj, feature) => {
-            obj[feature.key] = feature;
-            return obj;
-        }, {});
-    }
+    
 
-    validateFeatures(providedFeatures, categoryFeatures) {
-        const validatedFeatures = {};
-        for (const key in providedFeatures) {
-            if (categoryFeatures[key]) {
-                validatedFeatures[key] = providedFeatures[key];
-            } else {
-                throw new httpError.BadRequest(`Feature '${key}' is not valid for the selected category`);
-            }
-        }
-        return validatedFeatures;
-    }
+    
 
-    async deleteUploadedFiles(files){
-        if(!files) return;
-        try {
-            files.forEach(file => {
-                deleteFileInPublic(file.path.slice(7))
-            })
-        } catch (error) {
-            console.error('file deletion error:', error)   
-        }
-    }
+   
 }
