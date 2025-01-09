@@ -4,6 +4,7 @@ const { AuthMSG } = require("../../modules/auth/auth.msg")
 const crypto = require("crypto")
 const bcrypt = require("bcrypt")
 const path = require("path")
+const { FeaturesModel } = require("../../modules/features/features.model")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message, data) => {
@@ -52,30 +53,35 @@ const hashingUtils = {
 
 async function getCategoryFeatures(categoryId){
 const features = await FeaturesModel.find({category: categoryId})
-if(!features){
-    throw new httpErrors.NotFound("No features found for the selected category")
-}
+if (!features || features.length === 0) {
+    throw new httpErrors.NotFound("No features found for the selected category");
+  }
 return features
 }
 
 function convertFeaturesToObject(features) {
     return features.reduce((obj, feature) => {
-        obj[feature.key] = feature;
-        return obj;
+      obj[feature.key] = feature;
+      return obj;
     }, {});
-}
+  }
 
-function validateFeatures(providedFeatures, categoryFeatures) {
+  function validateFeatures(providedFeatures, categoryFeatures) {
     const validatedFeatures = {};
     for (const key in providedFeatures) {
-        if (categoryFeatures[key]) {
-            validatedFeatures[key] = providedFeatures[key];
-        } else {
-            throw new httpErrors.BadRequest(`Feature '${key}' is not valid for the selected category`);
-        }
+      if (categoryFeatures[key]) {
+        validatedFeatures[key] = providedFeatures[key];
+      } else {
+        throw new httpErrors.BadRequest(`Feature '${key}' is not valid for the selected category`);
+      }
     }
     return validatedFeatures;
-}
+  }
+
+function uploadFiles(files) {
+    if (!Array.isArray(files)) return [];
+    return files.map(file => file.path.slice(7));
+  } 
 
 async function deleteFileInPublic(fileAddress) {
     if(!fileAddress){
@@ -101,16 +107,24 @@ async function deleteFileInPublic(fileAddress) {
    
   }
 
-async function deleteUploadedFiles(files){
-    if(!files) return;
+  async function deleteUploadedFiles(files) {
+    if (!Array.isArray(files) || files.length === 0) return;
     try {
-        await Promise.all(
-            files.map(file => deleteFileInPublic(file.path.slice(7)))
-        )
+      await Promise.all(
+        files.map(file => {
+          let filePath = null;
+          if (typeof file === 'string') {
+            filePath = file;
+          } else if (file && typeof file.path === 'string') {
+            filePath = file.path.slice(7);
+          }
+          return filePath ? deleteFileInPublic(filePath) : Promise.resolve();
+        })
+      );
     } catch (error) {
-        console.error('file deletion error:', error)   
+      console.error('File deletion error:', error);
     }
-}
+  }
 
 
 module.exports = {
@@ -121,5 +135,6 @@ module.exports = {
     getCategoryFeatures,
     convertFeaturesToObject,
     validateFeatures,
-    deleteUploadedFiles
+    deleteUploadedFiles,
+    uploadFiles
 }
