@@ -172,7 +172,7 @@ async function getAllDescendantCategoryIds(categoryId){
 }
 
 async function deleteCategoryAndChildren(categoryId){
-  try {
+  
       const categoryHierarchy = await getAllDescendantCategoryIds(categoryId)
 
       try {
@@ -186,10 +186,6 @@ async function deleteCategoryAndChildren(categoryId){
       } catch (error) {
           throw new httpErrors.InternalServerError(CategoryMSG.CategoryDeleteFailed)
       }
-
-  } catch (error) {
-      next(error)
-  }
 }
 
 async function checkCategorySlugUniqueness(slug){

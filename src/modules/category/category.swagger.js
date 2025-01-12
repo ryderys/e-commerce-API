@@ -172,6 +172,7 @@
  *      tags: [Category]
  *      parameters:
  *          -   in: path
+ *              name: id
  *              required: true
  *              schema:
  *                  type: string

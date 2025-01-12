@@ -7,7 +7,7 @@ CategoryRoutes.post("/add", CategoryController.createCategory)
 
 CategoryRoutes.get("/all", CategoryController.getAllCategories)
 
-CategoryRoutes.delete("/remove/:Id", CategoryController.deleteCategoryById)
+CategoryRoutes.delete("/remove/:id", CategoryController.deleteCategoryById)
 
 module.exports = {
     CategoryRoutes

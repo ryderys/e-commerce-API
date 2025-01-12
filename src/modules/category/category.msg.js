@@ -4,7 +4,7 @@ const CategoryMSG = {
     CategoryNotFound : "category not found",
     ParentNotFound : "Parent category not found",
     slugExists: 'Category slug already exists',
-    InvalidCategoryId: 'Category is is invalid',
+    InvalidCategoryId: 'Category is invalid',
     failedChildFetch: 'Failed to fetch child categories',
     FailedToDeleteFeatures: 'failed to delete related features',
     CategoryDeleteFailed: 'failed to delete categories' 

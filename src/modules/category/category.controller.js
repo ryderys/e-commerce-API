@@ -60,14 +60,19 @@ class CategoryController{
     }
 
     async deleteCategoryById(req, res, next){
-        const {id} = req.params;
-        if(!isValidObjectId(id)){
-            throw new httpErrors.BadRequest(CategoryMSG.InvalidCategoryId)
+        try {
+            const {id} = req.params;
+            
+            if(!isValidObjectId(id)){
+                throw new httpErrors.BadRequest(CategoryMSG.InvalidCategoryId)
+            }
+
+            await deleteCategoryAndChildren(id)
+
+            return sendResponse(res, StatusCodes.OK ,CategoryMSG.CategoryDeleted)
+        } catch (error) {
+            next(error)
         }
-
-        await deleteCategoryAndChildren(id)
-
-        return sendResponse(res, CategoryMSG.CategoryDeleted)
     }
 
 
