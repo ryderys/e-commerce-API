@@ -6,6 +6,8 @@ const bcrypt = require("bcrypt")
 const path = require("path")
 const { FeaturesModel } = require("../../modules/features/features.model")
 const CookieNames = require("../constants/cookieEnum")
+const { CategoryModel } = require("../../modules/category/category.model")
+const { CategoryMSG } = require("../../modules/category/category.msg")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message = null , data = {}) => {
@@ -22,7 +24,7 @@ const sendResponse = (res, statusCode, message = null , data = {}) => {
     return res.status(statusCode).json(responseData)
 }
 
-// AUTH HELPER FUNCTIONS
+// AUTH HELPER FUNCTIONS________________________
 
 const signToken = {
     signAccessToken: (payload) => {
@@ -70,7 +72,7 @@ const setToken = (res, accessToken, refreshToken) => {
     });
 } 
 
-// PRODUCT HELPER FUNCTIONS
+// PRODUCT HELPER FUNCTIONS ___________________________
 
 async function getCategoryFeatures(categoryId){
 const features = await FeaturesModel.find({category: categoryId})
@@ -148,6 +150,56 @@ async function deleteFileInPublic(fileAddress) {
   }
 
 
+
+// CATEGORY HELPER FUNCTION_____________________________
+
+async function getAllDescendantCategoryIds(categoryId){
+  const categoriesToProcess = [categoryId]
+  const allCategoryIds = []
+
+  while(categoriesToProcess.length){
+      const currentId = categoriesToProcess.pop()
+      allCategoryIds.push(currentId)
+
+      try {
+          const childCategories = await CategoryModel.find({parent: currentId}, '_id').lean()
+          childCategories.forEach(child => categoriesToProcess.push(child._id))
+      } catch (error) {
+          throw new httpErrors.InternalServerError(CategoryMSG.failedChildFetch)   
+      }
+  }
+  return allCategoryIds
+}
+
+async function deleteCategoryAndChildren(categoryId){
+  try {
+      const categoryHierarchy = await getAllDescendantCategoryIds(categoryId)
+
+      try {
+          await FeaturesModel.deleteMany({category: {$in: categoryHierarchy}})
+      } catch (error) {
+          throw new httpErrors.InternalServerError(CategoryMSG.FailedToDeleteFeatures)
+      }
+
+      try {
+          await CategoryModel.deleteMany({_id: {$in: categoryHierarchy}})
+      } catch (error) {
+          throw new httpErrors.InternalServerError(CategoryMSG.CategoryDeleteFailed)
+      }
+
+  } catch (error) {
+      next(error)
+  }
+}
+
+async function checkCategorySlugUniqueness(slug){
+  const categorySlug = await CategoryModel.findOne({slug})
+  if (categorySlug) throw new httpErrors.Conflict(CategoryMSG.slugExists)
+  return null
+}
+
+
+
 module.exports = {
     sendResponse,
     signToken,
@@ -158,5 +210,8 @@ module.exports = {
     validateFeatures,
     deleteUploadedFiles,
     uploadFiles,
-    setToken
+    setToken,
+    getAllDescendantCategoryIds,
+    deleteCategoryAndChildren,
+    checkCategorySlugUniqueness
 }
