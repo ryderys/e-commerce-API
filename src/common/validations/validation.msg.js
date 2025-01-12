@@ -12,6 +12,9 @@ const ValidationMsg = {
     InvalidQuantity: 'Invalid quantity',
     InvalidType: 'Invalid type',
     InvalidFileFormat: 'Invalid file Format',
+    InvalidSlug: 'Invalid slug',
+    InvalidIcon: 'Invalid Icon',
+    InvalidId: 'Invalid parent ID'
 }
 
 module.exports = {
