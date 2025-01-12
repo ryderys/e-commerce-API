@@ -3,7 +3,7 @@ const { UserModel } = require("../user/user.model")
 const httpErrors = require("http-errors");
 const { AuthMSG } = require("./auth.msg");
 const {StatusCodes} = require("http-status-codes")
-const {sendResponse, verifyRefreshToken, signToken, hashingUtils } = require("../../common/utils/helperFunctions");
+const {sendResponse, verifyRefreshToken, signToken, hashingUtils, setToken } = require("../../common/utils/helperFunctions");
 const crypto = require("crypto");
 const CookieNames = require("../../common/constants/cookieEnum");
 
@@ -58,11 +58,16 @@ class UserAuthController {
     }
 
     async checkOTP(req, res, next) {
+        // const session = await UserModel.startSession()
+        // session.startTransaction()
         try {
             await checkOtpSchema.validateAsync(req.body);
             const {mobile, code} = req.body;
-            const user = await UserModel.findOne({mobile});
+
+            const user = await UserModel.findOne({mobile}); // query is a session 
             if(!user) throw new httpErrors.BadRequest(AuthMSG.UserNotFound)
+            
+            if(!user.otp) throw new httpErrors.BadRequest(AuthMSG.OTPNotFound)
             
             const now = Date.now();
             if(user?.otp?.expiresIn < now) throw new httpErrors.BadRequest(AuthMSG.OTPExpired)
@@ -72,7 +77,6 @@ class UserAuthController {
             
             if(!user.verifiedMobile) {
                 user.verifiedMobile = true
-                await user.save()
             }
             const accessToken = signToken.signAccessToken({mobile, id: user._id})
             const refreshToken = signToken.signRefreshToken({mobile, id: user._id})
@@ -80,11 +84,15 @@ class UserAuthController {
             user.hashedRefreshToken = await hashingUtils.hashRefreshToken(refreshToken);
 
             user.otp = null
-            await user.save()
+            await user.save() // save as a session
 
-            this.setToken(res, accessToken, refreshToken)
+            setToken(res, accessToken, refreshToken)
+            // await session.commitTransaction()
+            // session.endSession()
             return sendResponse(res, StatusCodes.OK, AuthMSG.LoginSuccess, {accessToken, refreshToken})
         } catch (error) {
+            // await session.abortTransaction()
+            // session.endSession()
             next(error)
         }
     }
@@ -110,7 +118,7 @@ class UserAuthController {
             user.hashedRefreshToken = await hashingUtils.hashRefreshToken(newRefreshToken)
             await user.save()
 
-            this.setToken(res, accessToken, newRefreshToken)
+            setToken(res, accessToken, newRefreshToken)
             return sendResponse(res, StatusCodes.OK, AuthMSG.TokenRefreshed, {accessToken, refreshToken: newRefreshToken})
         
         } catch (error) {
@@ -120,8 +128,9 @@ class UserAuthController {
 
     async logout(req, res, next){
         try {
+            
+            if(!req.user || !req.user._id) throw new httpErrors.BadRequest(AuthMSG.Login)
             const userId = req.user._id;
-            if(!userId) throw new httpErrors.BadRequest(AuthMSG.Login)
             const user = await UserModel.findById(userId)
             if(!user) throw new httpErrors.BadRequest(AuthMSG.UserNotFound)
 
@@ -142,21 +151,7 @@ class UserAuthController {
     }
 
 
-    setToken(res, accessToken, refreshToken) {
-        return res
-          .cookie(CookieNames.AccessToken, accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 1000 * 60 * 60,
-          })
-          .cookie(CookieNames.RefreshToken, refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 1000 * 60 * 60 * 24 * 7, //7 days
-          });
-      }
+    
 
     
 }

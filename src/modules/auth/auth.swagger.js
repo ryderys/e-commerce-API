@@ -85,10 +85,10 @@
  *          required: true
  *          content:
  *              application/x-www-form-urlencoded:
- *                  schemas:
+ *                  schema:
  *                      $ref: '#/components/schemas/MobileOnlyRequest'
  *              application/json:
- *                  schemas:
+ *                  schema:
  *                      $ref: '#/components/schemas/MobileOnlyRequest'
  *      responses:
  *          201:
@@ -115,10 +115,10 @@
  *          required: true
  *          content:
  *              application/x-www-form-urlencoded:
- *                  schemas:
+ *                  schema:
  *                      $ref: '#/components/schemas/CheckOTPRequest'
  *              application/json:
- *                  schemas:
+ *                  schema:
  *                      $ref: '#/components/schemas/CheckOTPRequest'
  *      responses:
  *          200:
@@ -146,13 +146,13 @@
  *              description: token refreshed
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          $ref: '#/components/schemas/LoginSuccessResponse'
  *          401:
  *              description: Unauthorized - invalid or missing refresh token
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          $ref: '#/components/schemas/ErrorResponse'
  */
 
@@ -167,7 +167,7 @@
  *              description: logout successful
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          type: object
  *                          properties:
  *                              statusCode:
@@ -184,7 +184,7 @@
  *              description: Bad request if user not logged in
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          $ref: '#/components/schemas/ErrorResponse'
  */
 

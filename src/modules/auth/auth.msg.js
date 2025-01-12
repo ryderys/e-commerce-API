@@ -2,6 +2,7 @@ const AuthMSG = {
     OTPNotExpired: "your code has not been expired yet!",
     OTPExpired: "your code has been expired!",
     OTPSuccess: "code has been sent successfully!",
+    OTPNotFound: "No OTP available for user",
     InvalidOTP: "Invalid code entered!",
     OTPCooldown: "Please wait for 30s before requesting another OTP!",
     UserNotFound: "User  not found. Please log in again.",

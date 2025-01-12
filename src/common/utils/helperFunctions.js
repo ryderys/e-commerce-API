@@ -5,6 +5,7 @@ const crypto = require("crypto")
 const bcrypt = require("bcrypt")
 const path = require("path")
 const { FeaturesModel } = require("../../modules/features/features.model")
+const CookieNames = require("../constants/cookieEnum")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message = null , data = {}) => {
@@ -52,6 +53,22 @@ const hashingUtils = {
         return bcrypt.compare(token, hashed)
     }
 }
+
+const setToken = (res, accessToken, refreshToken) => {
+  return res
+    .cookie(CookieNames.AccessToken, accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60,
+    })
+    .cookie(CookieNames.RefreshToken, refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60 * 24 * 7, //7 days
+    });
+} 
 
 // PRODUCT HELPER FUNCTIONS
 
@@ -140,5 +157,6 @@ module.exports = {
     convertFeaturesToObject,
     validateFeatures,
     deleteUploadedFiles,
-    uploadFiles
+    uploadFiles,
+    setToken
 }

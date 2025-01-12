@@ -7,8 +7,7 @@ const OTPSchema = new mongoose.Schema({
 
 const UserSchema = new mongoose.Schema({
     fullName: {
-        type: String,
-        required: true,
+        type: String
     },
     userName: {
         type: String,

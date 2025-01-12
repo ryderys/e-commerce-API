@@ -2,14 +2,18 @@ const express = require('express');
 const { mainRouter } = require('./src/app.routes');
 const { NotFoundHandler, ErrorHandler } = require('./src/common/utils/errorohandling');
 const { setupSwagger } = require('./src/config/swagger.config');
+const cookieParser = require("cookie-parser")
 const app = express()
 
+app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
 app.use(mainRouter)
 
 setupSwagger(app)
+
+require("./src/config/db.config")
 
 app.use(NotFoundHandler)
 app.use(ErrorHandler)
