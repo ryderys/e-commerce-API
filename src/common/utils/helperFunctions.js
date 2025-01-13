@@ -8,6 +8,7 @@ const { FeaturesModel } = require("../../modules/features/features.model")
 const CookieNames = require("../constants/cookieEnum")
 const { CategoryModel } = require("../../modules/category/category.model")
 const { CategoryMSG } = require("../../modules/category/category.msg")
+const { FeaturesMSG } = require("../../modules/features/features.msg")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message = null , data = {}) => {
@@ -194,6 +195,25 @@ async function checkCategorySlugUniqueness(slug){
   return null
 }
 
+async function checkExistCategoryById(id){
+  const category = await CategoryModel.findById(id);
+  if(!category) throw new httpErrors.NotFound(CategoryMSG.CategoryNotFound)
+  return category
+}
+
+
+// FEATURES HELPER FUNCTIONS__________
+
+async function checkExistsFeatureByCategoryAndKey(key , category, exceptionId = null){
+  const query = {category, key}
+  if(exceptionId){
+    query._id = { $ne: exceptionId}
+  }
+
+  const isExist = await FeaturesModel.findOne(query)
+  if(isExist) throw new httpErrors.Conflict(FeaturesMSG.FeatureExist)
+}
+
 
 
 module.exports = {
@@ -209,5 +229,7 @@ module.exports = {
     setToken,
     getAllDescendantCategoryIds,
     deleteCategoryAndChildren,
-    checkCategorySlugUniqueness
+    checkCategorySlugUniqueness,
+    checkExistCategoryById,
+    checkExistsFeatureByCategoryAndKey
 }

@@ -5,7 +5,7 @@ const { CategoryModel } = require("./category.model");
 const httpErrors = require("http-errors");
 const { CategoryMSG } = require("./category.msg");
 const { default: slugify } = require("slugify");
-const { sendResponse, deleteCategoryAndChildren, checkCategorySlugUniqueness } = require("../../common/utils/helperFunctions");
+const { sendResponse, deleteCategoryAndChildren, checkCategorySlugUniqueness, checkExistCategoryById } = require("../../common/utils/helperFunctions");
 const StatusCodes = require("http-status-codes");
 const { FeaturesModel } = require("../features/features.model");
 
@@ -20,7 +20,7 @@ class CategoryController{
             let {title, icon, slug, parent} = ValidatedCategory;
             let parents = []
             if(parent && isValidObjectId(parent)){
-                const existingCategory = await this.checkExistCategoryById(parent)
+                const existingCategory = await checkExistCategoryById(parent)
 
                 parent = existingCategory._id;
 
@@ -80,11 +80,7 @@ class CategoryController{
     
 
 
-    async checkExistCategoryById(id){
-        const category = await CategoryModel.findById(id);
-        if(!category) throw new httpErrors.NotFound(CategoryMSG.CategoryNotFound)
-        return category
-    }
+    
 
     
 }
