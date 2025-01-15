@@ -9,6 +9,10 @@ const CookieNames = require("../constants/cookieEnum")
 const { CategoryModel } = require("../../modules/category/category.model")
 const { CategoryMSG } = require("../../modules/category/category.msg")
 const { FeaturesMSG } = require("../../modules/features/features.msg")
+const ObjectIdValidator = require("../validations/public.validation")
+const { ProductModel } = require("../../modules/products/product.model")
+const { CartMsg } = require("../../modules/cart/cart.msg")
+const { ProductMsg } = require("../../modules/products/product.msg")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message = null , data = {}) => {
@@ -214,6 +218,59 @@ async function checkExistsFeatureByCategoryAndKey(key , category, exceptionId = 
   if(isExist) throw new httpErrors.Conflict(FeaturesMSG.FeatureExist)
 }
 
+// CART HELPER FUNCTIONS_________
+async function findProductById(productId){
+  const {id} = await ObjectIdValidator.validateAsync({id: productId})
+  const product = await ProductModel.findById(id)
+  if(!product) throw new httpErrors.NotFound(ProductMsg.ProductNotFound)
+  return product
+}
+
+async function validateCart(cart){
+  try {
+    if(!cart.items || cart.items.length === 0) return cart
+    const productIds = cart.items.map(item => item.productId)
+
+    const products = await ProductModel.find({_id: {$in: productIds}})
+    const productMap = new Map(products.map((product) => [product._id.toString(), product]))
+
+    // Identify invalid items
+    const invalidItems = []
+    for (const item of cart.items) {
+      const product = productMap.get(item.productId.toString())
+      if(!product || product.count < item.quantity){
+        invalidItems.push(item)
+      }
+    }
+
+    // Remove invalid items from the cart
+    
+    if(invalidItems.length > 0){
+      cart.items = cart.items.filter(
+        (item) => !invalidItems.some((invalid) => invalid.productId.equals(item.productId))
+      )
+      await cart.save()
+    }
+    return cart
+  } catch (error) {
+    throw new Error("cart validation failed")
+  }
+
+}
+
+async function expireCart(cart, expiresAt){
+  try {
+    if(!cart) throw new httpErrors.BadRequest("cart is required")
+    if(!expiresAt || isNaN(new Date(expiresAt).getTime())){
+      throw new Error("invalid expiration date")
+    }
+    cart.expiresAt = expiresAt
+    await cart.save()
+  } catch (error) {
+    throw new error("failed to set the cart expiration date")
+  }
+}
+
 
 
 module.exports = {
@@ -231,5 +288,8 @@ module.exports = {
     deleteCategoryAndChildren,
     checkCategorySlugUniqueness,
     checkExistCategoryById,
-    checkExistsFeatureByCategoryAndKey
+    checkExistsFeatureByCategoryAndKey,
+    findProductById,
+    validateCart,
+    expireCart
 }

@@ -14,7 +14,7 @@ const ValidationMsg = {
     InvalidFileFormat: 'Invalid file Format',
     InvalidSlug: 'Invalid slug',
     InvalidIcon: 'Invalid Icon',
-    InvalidId: 'Invalid parent ID',
+    InvalidId: 'Invalid ID',
     InvalidKey: 'Invalid key',
     InvalidList: 'list must be array or comma-separated string',
     InvalidGuid: 'the type of the sent guid is invalid',
