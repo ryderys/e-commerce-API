@@ -7,3 +7,7 @@ FeatureRoutes.get("/all", FeaturesController.getAllFeatures)
 FeatureRoutes.get("/by-category/:categoryId", FeaturesController.getFeaturesByCategoryId)
 FeatureRoutes.delete("/remove/:id", FeaturesController.removeFeatureById)
 FeatureRoutes.put("/update/:id", FeaturesController.updateFeatures)
+
+module.exports = {
+    FeatureRoutes
+}

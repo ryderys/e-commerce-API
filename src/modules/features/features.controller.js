@@ -117,20 +117,22 @@ class FeaturesController{
                 },
                 {
                     $project: {
-                        _id: 1,
-                        category: {
-                            __v: 0,
-                            _id: 0,
-                            parents: 0,
+                        _id: 0,
+                        category:{
+                            title: "$category.title",
+                            _id: "$category._id"
                         },
-                        features: 1,
+                        features: 1
                     }
                 },
-               
                 {
                     $sort: {"_id": -1}
                 }
             ])
+            if(!features.length){
+                throw new httpErrors.BadRequest(FeaturesMSG.FeatureNotFound)
+            }
+            
             return sendResponse(res, StatusCodes.OK, null, {features})
         } catch (error) {
             next(error)

@@ -1,5 +1,6 @@
 const { AuthRoutes } = require("./modules/auth/auth.routes");
 const { CategoryRoutes } = require("./modules/category/category.routes");
+const { FeatureRoutes } = require("./modules/features/features.routes");
 const { ProductRoutes } = require("./modules/products/product.routes");
 
 const mainRouter = require("express").Router();
@@ -7,6 +8,7 @@ const mainRouter = require("express").Router();
 mainRouter.use("/auth", AuthRoutes)
 mainRouter.use("/product", ProductRoutes)
 mainRouter.use("/category", CategoryRoutes)
+mainRouter.use("/feature", FeatureRoutes)
 
 module.exports = {
     mainRouter
