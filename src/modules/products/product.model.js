@@ -14,7 +14,8 @@ const ProductSchema = new mongoose.Schema({
     averageRating: {type: Number, default: 0, min: 0, max: 5},
     reviewCount: {type: Number, default: 0},
 }, {
-    timestamps: true
+    timestamps: true,
+    versionKey: false
 })
 
 ProductSchema.virtual("imagesURL").get(function(){

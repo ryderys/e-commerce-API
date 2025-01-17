@@ -21,6 +21,7 @@ class ProductController {
             const images = Array.isArray(req.files) ? req.files.map((file) => file.path.slice(7)) : [];
             const productBody = await createProductSchema.validateAsync(req.body)
             let {title, summary, description, price, tags, count, category, features } = productBody;
+            
             const supplier = req.user._id;
 
             const categoryFeatures = await getCategoryFeatures(category)
@@ -39,10 +40,22 @@ class ProductController {
                 features: validatedFeatures,
                 category
             })
+            
+            const filteredProduct = {
+                id: product._id,
+                title: product.title,
+                count: product.count,
+                summary: product.summary,
+                description: product.description,
+                category: product.category,
+                price: product.price,
+                images: product.images,
+                tags: product.tags,
+            }
 
-            return sendResponse(res, StatusCodes.CREATED, ProductMsg.ProductCreated, {product})
+            return sendResponse(res, StatusCodes.CREATED, ProductMsg.ProductCreated, {filteredProduct})
             } catch (error) {
-                await this.deleteUploadedFiles(req?.files)
+                await deleteUploadedFiles(req?.files)
                 next(error)
             }
     }

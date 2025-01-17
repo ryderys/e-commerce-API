@@ -11,7 +11,7 @@
  *      schemas:
  *          addProduct:
  *              type: object
- *              required:  ["title", "summary", "description", "category", "price"]
+ *              required:  ["title", "summary", "description", "category", "price", "count"]
  *              properties:
  *                  title:
  *                      type: string
@@ -26,11 +26,13 @@
  *                      description: detailed description of the product
  *                      example: "This is an awesome product with great features."
  *                  tags:
- *                      type: array    
+ *                      oneOf:
+ *                          - type: string
+ *                          - type: array   
  *                      items:
  *                          type: string
- *                      description: tags associated with the product
- *                      example: ["electronics", "gadgets"]
+ *                      description: Tags for the product. You can provide a single string of tags separated by commas, hashes, or whitespace, or an array of strings. The API will process and convert string inputs into an array.
+ *                      example: electronics, gadgets
  *                  category:
  *                      type: string    
  *                      description: category ID of the product
@@ -39,6 +41,10 @@
  *                      type: string    
  *                      description: price of the product
  *                      example: "99.99"
+ *                  count:
+ *                      type: number    
+ *                      description: the count of product
+ *                      example: 1
  *                  images:
  *                      type: array    
  *                      items:
@@ -108,34 +114,40 @@
  *                  data:
  *                      type: object
  *                      properties:
- *                          id:
- *                              type: string
- *                              example: "64c9a4b23e2345d67"
- *                          title:
- *                              type: string
- *                              example: "Awesome Product"
- *                          summary:
- *                              type: string
- *                              example: "Product summary"
- *                          description:
- *                              type: string
- *                              example: "Detailed product description"
- *                          category:
- *                              type: string
- *                              example: "64c9a4b23e2345d67"
- *                          price:
- *                              type: string
- *                              example: "99.99"
- *                          images:
- *                              type: array
- *                              items:
- *                                  type: string
- *                                  example: ["image1.jpg", "image2.jpg"]
- *                          tags:
- *                              type: array
- *                              items:
- *                                  type: string
- *                                  example: ["tag1", "tag2"]
+ *                          products:
+ *                              type: object
+ *                              properties:
+ *                                  id:
+ *                                      type: string
+ *                                      example: "64c9a4b23e2345d67"
+ *                                  title:
+ *                                      type: string
+ *                                      example: "Awesome Product"
+ *                                  count:
+ *                                      type: number
+ *                                      example: 1
+ *                                  summary:
+ *                                      type: string
+ *                                      example: "Product summary"
+ *                                  description:
+ *                                      type: string
+ *                                      example: "Detailed product description"
+ *                                  category:
+ *                                      type: string
+ *                                      example: "64c9a4b23e2345d67"
+ *                                  price:
+ *                                      type: string
+ *                                      example: "99.99"
+ *                                  images:
+ *                                      type: array
+ *                                      items:
+ *                                          type: string
+ *                                          example: ["image1.jpg", "image2.jpg"]
+ *                                  tags:
+ *                                      type: array
+ *                                      items:
+ *                                          type: string
+ *                                          example: ["tag1", "tag2"]
  *          errorResponse:
  *              type: object
  *              properties:
