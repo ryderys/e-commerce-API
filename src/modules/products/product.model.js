@@ -1,7 +1,12 @@
 const { default: mongoose } = require("mongoose");
 
+const FeatureSchema = new mongoose.Schema({
+    feature: {type: String, required: true, trim: true, lowercase: true},
+    values: {type: [String], required: true, trim: true, lowercase: true},
+})
+
 const ProductSchema = new mongoose.Schema({
-    title: {type: String, required: true, trim: true},
+    title: {type: String, required: true, trim: true, lowercase: true},
     summary: {type: String, required: true, trim: true},
     description: {type: String, required: true, trim: true},
     tags: {type: [String], required: true},
@@ -10,7 +15,11 @@ const ProductSchema = new mongoose.Schema({
     count: {type: Number, default: 0, min: 0},
     images: {type: [String], required: false, default: []},
     supplier: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
-    features: {type: Object, default: {}},
+    // features: [{
+    //     feature: {type: String, required: true }, // Color, Size
+    //     values: {type: [String], required: true} // ['red', 'blue']
+    // }],
+    features: [FeatureSchema],
     averageRating: {type: Number, default: 0, min: 0, max: 5},
     reviewCount: {type: Number, default: 0},
 }, {

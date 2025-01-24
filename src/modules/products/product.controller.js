@@ -1,11 +1,13 @@
 const autoBind = require("auto-bind");
+const path = require("path")
 const { createProductSchema, updateProductSchema } = require("../../common/validations/product.validation");
 const { ProductModel } = require("./product.model");
 const { ProductMsg } = require("./product.msg");
-const { getCategoryFeatures, convertFeaturesToObject, validateFeatures, sendResponse, deleteUploadedFiles, uploadFiles } = require("../../common/utils/helperFunctions");
+const { getCategoryFeatures, convertFeaturesToObject, validateFeatures, sendResponse, deleteUploadedFiles, uploadFiles, formatProductFeatures } = require("../../common/utils/helperFunctions");
 const { StatusCodes } = require("http-status-codes");
 const httpErrors = require("http-errors");
 const ObjectIdValidator = require("../../common/validations/public.validation");
+const { default: mongoose } = require("mongoose");
 
 
 class ProductController {
@@ -18,15 +20,39 @@ class ProductController {
                 throw new httpErrors.Unauthorized(ProductMsg.UserNotFound);
               }
 
-            const images = Array.isArray(req.files) ? req.files.map((file) => file.path.slice(7)) : [];
-            const productBody = await createProductSchema.validateAsync(req.body)
+            const images = Array.isArray(req.files) ? req.files.map((file) => path.basename(file.path)) : [];
+           
+            if(typeof req.body.features === 'string'){
+                req.body.features = JSON.parse(req.body.features)
+            }
+            if(!Array.isArray(req.body.features)){
+                throw new httpErrors.BadRequest("Invalid features format. Must be a valid JSON string.")
+            }
+            
+                
+            const productBody = await createProductSchema.validateAsync({...req.body, features: req.body.features},
+                {stripUnknown: true}
+            )
+            
             let {title, summary, description, price, tags, count, category, features } = productBody;
+
+            const existingProduct = await ProductModel.findOne({
+                title: title.trim(),
+                category
+            })
+            if(existingProduct){
+                throw new httpErrors.Conflict(ProductMsg.ProductExist)
+            }
             
             const supplier = req.user._id;
+            
 
             const categoryFeatures = await getCategoryFeatures(category)
             const categoryFeaturesObject = convertFeaturesToObject(categoryFeatures);
-            const validatedFeatures = validateFeatures(features, categoryFeaturesObject);
+
+            // Validate the provided features against category features
+            const validatedFeatures = validateFeatures(features, categoryFeaturesObject, true);
+
 
             const product = await ProductModel.create({
                 title,
@@ -40,6 +66,7 @@ class ProductController {
                 features: validatedFeatures,
                 category
             })
+            console.log(product)
             
             const filteredProduct = {
                 id: product._id,
@@ -51,6 +78,7 @@ class ProductController {
                 price: product.price,
                 images: product.images,
                 tags: product.tags,
+                features: product.features
             }
 
             return sendResponse(res, StatusCodes.CREATED, ProductMsg.ProductCreated, {filteredProduct})
@@ -62,45 +90,62 @@ class ProductController {
 
     async updateProduct(req, res, next){
         try {
-            const {id} = req.params;
-            if(!id) throw new httpErrors.BadRequest(ProductMsg.NoID)
-            
-            const updates = await updateProductSchema.validateAsync(req.body);
-            if(Object.keys(updates).length === 0){
-                throw new httpErrors.BadRequest(ProductMsg.NoUpdate)
+            const {productId} = req.params;
+            if(!mongoose.Types.ObjectId.isValid(productId)) throw new httpErrors.BadRequest(ProductMsg.InvalidId)
+            if(!productId) throw new httpErrors.BadRequest(ProductMsg.NoID)
+
+            if(!req.user || !req.user._id){
+                throw new httpErrors.Unauthorized(ProductMsg.UserNotFound)
             }
 
-            const product = await this.findProductById(id)
+            const images = Array.isArray(req.files) ? req.files.map((file) => path.basename(file.path)) : product.images;
 
-             // Image handling
-            if (req?.files?.length > 0) {
-                if (product.images && product.images.length > 0) {
-                await deleteUploadedFiles(product.images);
+            if(req.body.features && typeof req.body.features === 'string'){
+                req.body.features = JSON.parse(req.body.features)
+            }
+            if(req.body.features && !Array.isArray(req.body.features)){
+                throw new httpErrors.BadRequest(ProductMsg.InvalidFeature)
+            }
+
+            const updateData = await updateProductSchema.validateAsync({...req.body, features: req.body.features}, {stripUnknown: true});
+            const {title, summary , description ,category, features , price, tags, count} = updateData
+
+            const product = await this.findProductById(productId)
+            if(title && category){
+                const existingProduct = await ProductModel.findOne({
+                    _id: {$ne: productId},
+                    title: title.trim(),
+                    category
+                })
+                if(existingProduct){
+                    throw new httpErrors.Conflict(ProductMsg.ProductExist)
                 }
-                
-                const newImages =  uploadFiles(req.files);
-                updates.images = newImages;
-            } else if (!updates.images) {
-                updates.images = product.images || [];
-            } else if (typeof updates.images === "string") {
-                updates.images = [updates.images];
             }
-
-            if(updates.features){
-                const categoryFeatures = getCategoryFeatures(product.category)
+            let validatedFeatures = product.features;
+            if(features){
+                const categoryFeatures = await getCategoryFeatures(category || product.category)
                 const categoryFeaturesObject = convertFeaturesToObject(categoryFeatures)
-                updates.features =  validateFeatures(updates.features, categoryFeaturesObject)
+                validatedFeatures = validateFeatures(features, categoryFeatures, true)
             }
 
-            Object.assign(product, updates)
+            Object.assign(product, {...updateData, images, features: validatedFeatures})
             await product.save()
-
-            return sendResponse(res, StatusCodes.OK, ProductMsg.ProductUpdated, {product})
+            const filteredProduct = {
+                id: product._id,
+                title: product.title,
+                count: product.count,
+                summary: product.summary,
+                description: product.description,
+                category: product.category,
+                price: product.price,
+                images: product.images,
+                tags: product.tags,
+                features: product.features
+            };
+            return sendResponse(res, StatusCodes.OK, ProductMsg.ProductUpdated, {filteredProduct})
 
         } catch (error) {
-            if(req?.files?.length > 0){
-                await deleteUploadedFiles(req?.files)
-            }
+            await deleteUploadedFiles(req?.files)
             next(error)
         }
     }

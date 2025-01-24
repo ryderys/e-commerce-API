@@ -9,6 +9,9 @@ const ProductMsg = {
     NoUpdate: "No updates provided",
     NoID: "Missing product Id",
     NoUpdate: "No updates provided",
+    ProductExist: "A product with this title already exists in this category.",
+    InvalidId: "Invalid product ID",
+    InvalidFeature: "Invalid features format. Must be a valid JSON string."
     
 }
 

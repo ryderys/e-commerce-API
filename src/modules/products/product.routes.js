@@ -9,7 +9,7 @@ ProductRoutes.post("/add",Authentication, uploadFileMulter.array("images", 10), 
 ProductRoutes.get("/all", ProductController.getAllProducts)
 ProductRoutes.get("/:id", ProductController.getOneProductById)
 ProductRoutes.delete("/remove/:id", Authentication, ProductController.deleteProductById)
-ProductRoutes.patch("/update/:id", Authentication, uploadFileMulter.array("images", 10) , stringToArray("tags"), ProductController.updateProduct)
+ProductRoutes.patch("/update/:productId", Authentication, uploadFileMulter.array("images", 10) , stringToArray("tags"), ProductController.updateProduct)
 
 module.exports = {
     ProductRoutes

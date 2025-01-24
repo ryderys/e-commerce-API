@@ -13,6 +13,7 @@ const ObjectIdValidator = require("../validations/public.validation")
 const { ProductModel } = require("../../modules/products/product.model")
 const { CartMsg } = require("../../modules/cart/cart.msg")
 const { ProductMsg } = require("../../modules/products/product.msg")
+const { default: mongoose } = require("mongoose")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message = null , data = {}) => {
@@ -80,30 +81,139 @@ const setToken = (res, accessToken, refreshToken) => {
 // PRODUCT HELPER FUNCTIONS ___________________________
 
 async function getCategoryFeatures(categoryId){
-const features = await FeaturesModel.find({category: categoryId})
-if (!features || features.length === 0) {
-    throw new httpErrors.NotFound("No features found for the selected category");
+  if(!mongoose.Types.ObjectId.isValid(categoryId)){
+    throw new httpErrors.BadRequest("Invalid category ID format")
   }
-return features
+  const features = await FeaturesModel.find({category: categoryId})
+  if (!features || features.length === 0) {
+      throw new httpErrors.NotFound("No features found for the selected category");
+    }
+  return features
 }
 
 function convertFeaturesToObject(features) {
     return features.reduce((obj, feature) => {
-      obj[feature.key] = feature;
+      if(!feature.key || !Array.isArray(feature.list)){
+        console.warn(`Skipping invalid feature: ${JSON.stringify(feature)}`)
+      }
+      if(obj[feature.key]){
+        console.warn(`Duplicate feature key found: '${feature.key}'`)
+      }
+      obj[feature.key] = feature.list;
       return obj;
     }, {});
   }
 
-  function validateFeatures(providedFeatures, categoryFeatures) {
-    const validatedFeatures = {};
-    for (const key in providedFeatures) {
-      if (categoryFeatures[key]) {
-        validatedFeatures[key] = providedFeatures[key];
-      } else {
-        throw new httpErrors.BadRequest(`Feature '${key}' is not valid for the selected category`);
+  // function validateFeatures(providedFeatures, categoryFeatures) {
+  //   const validatedFeatures = {};
+  //   for (const key in providedFeatures) {
+  //     if (categoryFeatures[key]) {
+  //       validatedFeatures[key] = providedFeatures[key]; // Store valid features and their values
+  //     } else {
+  //       throw new httpErrors.BadRequest(`Feature '${key}' is not valid for the selected category`);
+  //     }
+  //   }
+  //   return validatedFeatures;
+  // } previous one
+
+  function validateFeatures(providedFeatures, categoryFeatures, allowedCustomValues = true) {
+    const validatedFeaturesMap = new Map();
+  
+    providedFeatures.forEach(featureObj => {
+      const { feature, values } = featureObj;
+
+      if(!feature || !Array.isArray(values)){
+        throw new httpErrors.BadRequest(`Invalid feature format. Feature must have a 'feature' name and an array of 'values'.`)
       }
-    }
+
+      const normalizedFeature = feature.toLowerCase()
+      const normalizedValues = values.map(val => val.trim().toLowerCase())
+
+      // Validate against category features
+      if (categoryFeatures[normalizedFeature]) {
+        const allowedValues = categoryFeatures[normalizedFeature].map(val => val.toLowerCase());
+  
+        if(!allowedCustomValues){
+          const invalidValues = normalizedValues.filter(val => !allowedValues.includes(val))
+          if (invalidValues.length < 0){
+            throw new httpErrors.BadRequest(`Invalid value(s) for feature '${feature}': ${invalidValues.join(", ")}.`)
+          }
+        }
+
+        if(validatedFeaturesMap.has(feature)){
+          const existingValues = validatedFeaturesMap.get(feature)
+          const mergedValues = Array.from(new Set([...existingValues, ...values]))
+          validatedFeaturesMap.set(feature, mergedValues)
+        } else {
+          validatedFeaturesMap.set(feature, values)
+        }
+      }
+
+      else if(allowedCustomValues){
+        if (validatedFeaturesMap.has(feature)){
+          const existingValues = validatedFeaturesMap.get(feature)
+          const mergedValues = Array.from(new Set([...existingValues, ...values]))
+          validatedFeaturesMap.set(feature, mergedValues)
+        } else {
+          validatedFeaturesMap.set(feature, values)
+        }
+      } 
+      
+      else {
+        throw new httpErrors.BadRequest(`Feature '${feature}' is not recognized.`);
+      }
+    });
+    const validatedFeatures = Array.from(validatedFeaturesMap.entries()).map(([feature, values]) => ({
+      feature,
+      values
+    }))
     return validatedFeatures;
+  }
+
+  // function validateFeatures(providedFeatures, categoryFeatures, allowedCustomValues = true) {
+  //   const validatedFeatures = [];
+  
+  //   providedFeatures.forEach(featureObj => {
+  //     const { feature, values } = featureObj;
+
+  //     if(!feature || !Array.isArray(values)){
+  //       throw new httpErrors.BadRequest(`Invalid feature format. Feature must have a 'feature' name and an array of 'values'.`)
+  //     }
+
+  //     const normalizedFeature = feature.toLowerCase()
+  //     const normalizedValues = values.map(val => val.trim().toLowerCase())
+
+  //     // If feature exists in category, validate values
+  //     if (categoryFeatures[normalizedFeature]) {
+  //       const allowedValues = categoryFeatures[normalizedFeature].map(val => val.toLowerCase());
+  
+  //       if(!allowedCustomValues){
+  //         if(!normalizedValues.every(val => allowedValues.includes(val))){
+  //           const invalidValues = normalizedValues.filter(val => !allowedValues.includes(val))
+  //           throw new httpErrors.BadRequest(`Invalid value(s) for feature '${feature}': ${invalidValues.join(", ")}.`)
+  //         }
+  //       }
+  //       validatedFeatures.push({ feature, values });
+  //     } 
+  //     else if(allowedCustomValues){
+  //       validatedFeatures.push({feature, values})
+  //     }
+  //     else {
+  //       throw new httpErrors.BadRequest(`Feature '${feature}' is not recognized.`);
+  //     }
+  //   });
+  
+  //   return validatedFeatures;
+  // }
+  
+
+
+
+  function formatProductFeatures(validatedFeatures){
+    return Object.keys(validatedFeatures).map((key) => ({
+      feature: key,
+      values: validatedFeatures[key] //// values for this feature (e.g., ["Red", "Blue"])
+    }))
   }
 
 function uploadFiles(files) {
@@ -291,5 +401,6 @@ module.exports = {
     checkExistsFeatureByCategoryAndKey,
     findProductById,
     validateCart,
-    expireCart
+    expireCart,
+    formatProductFeatures
 }

@@ -9,6 +9,19 @@
  * @swagger
  *  components:
  *      schemas:
+ *          Feature:
+ *              type: object
+ *              properties:
+ *                  feature:
+ *                      type: string
+ *                      example: "color"
+ *                      description: The name of the feature (e.g., "Color", "Size")
+ *                  values:
+ *                      type: array
+ *                      items:
+ *                          type: string
+ *                      example: ["red", "blue"]
+ *                      description: The values for this feature (e.g., 'red', 'green')
  *          addProduct:
  *              type: object
  *              required:  ["title", "summary", "description", "category", "price", "count"]
@@ -51,41 +64,57 @@
  *                          type: string
  *                          format: binary
  *                      description: images of the product
+ *                  features:
+ *                      type: array
+ *                      items:
+ *                          $ref: '#/components/schemas/Feature'
+ *                      description: An array of features for the product, with each feature containing a name and a set of values
  *          updateProduct:
  *              type: object
  *              properties:
  *                  title:
  *                      type: string
- *                      description: updated title of product
- *                      example: "updated product title"
+ *                      description: the title of product
+ *                      example: "t-shirt"
  *                  summary:
  *                      type: string    
- *                      description: updated summary of product
+ *                      description: summary of product
  *                      example: "A short summary of the product"
  *                  description:
  *                      type: string    
- *                      description: updated description of the product
+ *                      description: detailed description of the product
  *                      example: "This is an awesome product with great features."
  *                  tags:
- *                      type: array    
+ *                      oneOf:
+ *                          - type: string
+ *                          - type: array   
  *                      items:
  *                          type: string
- *                      description: updated tags for the product
- *                      example: ["updatedTag1", "updatedTag2"]
+ *                      description: Tags for the product. You can provide a single string of tags separated by commas, hashes, or whitespace, or an array of strings. The API will process and convert string inputs into an array.
+ *                      example: electronics, gadgets
  *                  category:
  *                      type: string    
- *                      description: updated category ID of the product
+ *                      description: category ID of the product
  *                      example: "64c9a4b23e2345d67"
  *                  price:
  *                      type: string    
- *                      description: updated price of the product
+ *                      description: price of the product
  *                      example: "99.99"
+ *                  count:
+ *                      type: number    
+ *                      description: the count of product
+ *                      example: 1
  *                  images:
  *                      type: array    
  *                      items:
  *                          type: string
  *                          format: binary
- *                      description: updated product images
+ *                      description: images of the product
+ *                  features:
+ *                      type: array
+ *                      items:
+ *                          $ref: '#/components/schemas/Feature'
+ *                      description: An array of features for the product, with each feature containing a name and a set of values
  *          PaginationMetadata:
  *              type: object
  *              properties:
@@ -148,6 +177,10 @@
  *                                      items:
  *                                          type: string
  *                                          example: ["tag1", "tag2"]
+ *                                  message:
+ *                                      type: string
+ *                                      example: product added successfully
+ *                                      
  *          errorResponse:
  *              type: object
  *              properties:
@@ -157,6 +190,7 @@
  *                  message:
  *                      type: string
  *                      example: "Invalid Request parameters"
+ *
  *        
  */
 
@@ -189,13 +223,13 @@
 
 /**
  * @swagger
- * /product/update/{id}:
+ * /product/update/{productId}:
  *  patch:
  *      summary: update a product by id
  *      tags: [Product]
  *      parameters:
  *          -   in: path
- *              name: id
+ *              name: productId
  *              required: true
  *              schema:
  *                  type: string
