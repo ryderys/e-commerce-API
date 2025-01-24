@@ -162,7 +162,7 @@
  *                                      type: string
  *                                      example: "Detailed product description"
  *                                  category:
- *                                      type: string
+ *                                      type: object
  *                                      example: "64c9a4b23e2345d67"
  *                                  price:
  *                                      type: string
@@ -180,6 +180,75 @@
  *                                  message:
  *                                      type: string
  *                                      example: product added successfully
+ *          getAllProductsResponse:
+ *              type: object
+ *              properties:
+ *                  id:
+ *                      type: string
+ *                      example: "64c9a4b23e2345d67"
+ *                  title:
+ *                      type: string
+ *                      example: "Awesome Product"
+ *                  summary:
+ *                      type: string
+ *                      example: "Product summary"
+ *                  description:
+ *                      type: string
+ *                      example: "Detailed product description"
+ *                  price:
+ *                      type: number
+ *                      example: "99.99"
+ *                  count:
+ *                      type: number
+ *                      example: 1
+ *                  images:
+ *                      type: array
+ *                      items:
+ *                          type: string
+ *                          example: ["image1.jpg", "image2.jpg"]
+ *                  tags:
+ *                      type: array
+ *                      items:
+ *                          type: string
+ *                          example: ["tag1", "tag2"]
+ *                  features:
+ *                      type: array
+ *                      items:
+ *                          type: object
+ *                          properties:
+ *                              feature:
+ *                                  type: string
+ *                                  example: "color"
+ *                              values:
+ *                                  type: array
+ *                                  items:
+ *                                      type: string
+ *                              example: ["red", "blue"]
+ *                  reviewCount:
+ *                      type: number
+ *                      example: 1
+ *                  averageRating:
+ *                      type: number
+ *                      example: 1
+ *                  category:
+ *                      type: object
+ *                      properties:
+ *                          id:
+ *                              type: string
+ *                              example: "64c9a4b23e2345d67"
+ *                          title:
+ *                              type: string
+ *                              example: "t-shirt"
+ *                          parent:
+ *                              type: string
+ *                              example: "6783f661946844b72680020e"
+ *                  createdAt:
+ *                      type: string
+ *                      format: date-time
+ *                  updatedAt:
+ *                      type: string
+ *                      format: date-time
+ *                                      
  *                                      
  *          errorResponse:
  *              type: object
@@ -287,12 +356,18 @@
  *                      schema:
  *                          type: object
  *                          properties:
- *                              products:
- *                                  type: array
- *                                  items:
- *                                      $ref: '#/components/schemas/productResponse'
- *                              pagination:
- *                                  $ref: '#/components/schemas/PaginationMetadata'
+ *                              statusCode:
+ *                                  type: number
+ *                                  example: 200
+ *                              data:
+ *                                  type: object
+ *                                  properties:
+ *                                      products:
+ *                                          type: array
+ *                                          items:
+ *                                              $ref: '#/components/schemas/getAllProductsResponse'
+ *                                      pagination:
+ *                                          $ref: '#/components/schemas/PaginationMetadata'
  *          400:
  *              description: Invalid Request Parameters
  *              content:

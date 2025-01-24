@@ -166,6 +166,14 @@ class ProductController {
           const limit = parseInt(req.query.limit, 10) || 10;
           const skip = (page - 1) * limit;
       
+          const totalProducts = await ProductModel.aggregate([
+            {$match: matchStage},
+            {$count: 'total'}
+          ])
+
+          const totalItems = totalProducts.length > 0 ? totalProducts[0].total: 0;
+          const totalPages = Math.ceil(totalItems / limit)
+
           const products = await ProductModel.aggregate([
             { $match: matchStage },
             {
@@ -195,8 +203,6 @@ class ProductController {
                 category: {
                   id: "$category._id",
                   title: "$category.title",
-                  slug: "$category.slug",
-                  icon: "$category.icon",
                   parent: "$category.parent",
                   children: "$category.children"
                 },
@@ -208,7 +214,7 @@ class ProductController {
             { $limit: limit }
           ]);
       
-          return sendResponse(res, StatusCodes.OK, null,  {products, pagination: {page, limit}})
+          return sendResponse(res, StatusCodes.OK, null,  {products, pagination: {page, limit, totalItems, totalPages}})
 
         } catch (error) {
           next(error);
@@ -220,7 +226,29 @@ class ProductController {
             const {id} = req.params;
             if(!id) throw new httpErrors.BadRequest(ProductMsg.NoID)
             const product = await this.findProductById(id)
-            return sendResponse(res, StatusCodes.OK, null, {product})
+            const filteredProduct = {
+                id: product._id,
+                title: product.title,
+                summary: product.summary,
+                description: product.description,
+                price: product.price,
+                count: product.count,
+                images: product.images,
+                tags: product.tags,
+                features: product.features,
+                reviewCount: product.reviewCount,
+                averageRating: product.averageRating,
+                supplier: product.supplier,
+                category: {
+                    id: product.category._id,
+                    title: product.category.title,
+                    parent: product.category.parent,
+                    children: product.category.children
+                },
+                createdAt: product.createdAt,
+                updatedAt: product.updatedAt
+            };
+            return sendResponse(res, StatusCodes.OK, null, {filteredProduct})
         } catch (error) {
             next(error)
         }
@@ -254,7 +282,7 @@ class ProductController {
     async findProductById(productId){
         try {
             const {id} = await ObjectIdValidator.validateAsync({id: productId})
-            const product = await ProductModel.findById(id)
+            const product = await ProductModel.findById(id).populate('category').exec()
             if(!product) throw new httpErrors.NotFound(ProductMsg.ProductNotFound)
             return product
         } catch (error) {
