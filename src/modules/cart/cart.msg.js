@@ -5,7 +5,10 @@ const CartMsg = {
     AddToCartSuccess: "item added to the cart successfully",
     CartNFound: "cart not found",
     ItemNotInCart: "the item is not on your cart",
-    DeletedSuccess: "the item successfully removed from your cart"
+    DeletedSuccess: "the item successfully removed from your cart",
+    CartRetrieved: "cart retrieved successfully",
+    CartCleared: "cart cleared successfully",
+    InvalidCartItems: "Some items in your cart are invalid"
 
 }
 

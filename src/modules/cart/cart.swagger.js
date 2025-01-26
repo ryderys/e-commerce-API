@@ -175,3 +175,19 @@
  *                      schema:
  *                          $ref: '#/components/schemas/ErrorResponse'
  */
+/**
+ * @swagger
+ * /cart/clear-cart:
+ *  get:
+ *      summary: clear cart
+ *      tags: [Cart]
+ *      responses:
+ *          200:
+ *              description: Cart cleared successfully
+ *          404:
+ *              description: cart not found
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          $ref: '#/components/schemas/ErrorResponse'
+ */

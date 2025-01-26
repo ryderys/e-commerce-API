@@ -30,25 +30,27 @@ class CartController{
             if(!req.user || !req.user._id){
                 throw new httpErrors.Unauthorized(CartMsg.UserNotFound)
             }
+            
             const cartBody = await AddToCartSchema.validateAsync(req.body)
             const {productId, quantity} = cartBody;
             const userId = req.user._id;
-    
+            
             // Ensure quantity is a positive number
             const numericQuantity = Number(quantity)
             if(isNaN(numericQuantity) || numericQuantity <= 0){
                 throw new httpErrors.BadRequest(CartMsg.InvalidQuantity)
             }
     
-             // Retrieve the product and check stock
+            //  Retrieve the product and check stock
             const product = await findProductById(productId)
             if(product.count < numericQuantity){
                 throw new httpErrors.BadRequest(CartMsg.InsufficientStock)
             }
+
     
             // Retrieve or create the user's cart
             let cart = await this.getOrCreateCart(userId)
-    
+            
             // Find if the item already exists in the cart
             const existingItem = cart.items.find(item => item.productId.equals(productId))
             if (existingItem){
@@ -56,14 +58,35 @@ class CartController{
                 existingItem.quantity += numericQuantity
             }else {
                 // Otherwise, add a new item to the cart
-                cart.items.push({productId, quantity: numericQuantity})
+                cart.items.push({productId, quantity: numericQuantity, price: product.price})
             }
+
+            const {validCart, invalidItems} = await validateCart(cart)
+            if(invalidItems.length > 0){
+               return sendResponse(res, StatusCodes.BAD_REQUEST,
+                   CartMsg.InvalidCartItems, {invalidItems})
+               }
+
+            cart.totalQuantity = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+            cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
     
-            await cart.save()
+            
+            await validCart.save()
              // Validate cart and set expiration if needed
-            await validateCart(cart)
+
             await expireCart(cart, Date.now() + 30 * 60 * 1000)
-            return sendResponse(res, StatusCodes.OK, CartMsg.AddToCartSuccess)
+            return sendResponse(res, StatusCodes.OK, CartMsg.AddToCartSuccess, {
+                cart: {
+                    id: validCart._id,
+                    items: validCart.items.map(item => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        price: item.price
+                    })),
+                    totalQuantity: validCart.totalQuantity,
+                    totalPrice: validCart.totalPrice
+                }
+            })
         } catch (error) {
             next(error)
         }
@@ -82,8 +105,9 @@ class CartController{
                 { new: true}
             )
             if(!cart) throw new httpErrors.NotFound(CartMsg.CartNFound)
-            const itemStillExist = cart.items.some((item) => item.productId.toString() === productId)
-            if(itemStillExist) throw new httpErrors.BadRequest(CartMsg.ItemNotInCart)
+            cart.totalQuantity = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+            cart.totalPrice = cart.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+            await cart.save();
             
             return sendResponse(res, StatusCodes.OK, CartMsg.DeletedSuccess, {cart})
 
@@ -97,36 +121,40 @@ class CartController{
             const userId = req.user._id;
             const cart = await CartModel.findOne({userId}).populate('items.productId')
             if(!cart) throw new httpErrors.NotFound(CartMsg.CartNFound)
+                // console.log('Cart Before Validation:', JSON.stringify(cart, null, 2));  // Log the cart here
+            const {validCart} = await validateCart(cart)
+            // console.log('Valid Cart:', JSON.stringify(validCart, null, 2)); // Log the valid cart after validation
+            const sanitizedCart = {
+                id: validCart._id,
+                items: validCart.items.map(item => ({
+                    productId: item.productId._id,
+                    title: item.productId.title,
+                    images: item.productId.images,
+                    quantity: item.quantity,
+                    price: item.price,
+                    total: item.quantity * item.price
+                })),
+                totalQuantity: validCart.totalQuantity,
+                totalPrice: validCart.totalPrice
+            };
 
-            const validatedCart = await validateCart(cart)
-
-            return this.sendCartResponse(res, validatedCart)
+            return sendResponse(res, StatusCodes.OK, CartMsg.CartRetrieved, {...sanitizedCart})
         } catch (error) {
             next(error)
         }
     }
 
-    sendCartResponse(res, cart, message = null){
-        const items = Array.isArray(cart.item) ? cart.items.map(item => ({
-            id: item._id,
-            productId: item.productId,
-            quantity: item.quantity,
-            productName: item.productId ? item.productId.name : null,
-            productPrice: item.productId ? item.productId.price : null,
-        })) : [] 
-        
-        const cartResponse = {
-            _id: cart._id,
-            userId: cart.userId,
-            items,
-            expiresAt: cart.expiresAt
-        }
-        const responseData = {cart: cartResponse}
-        if(message){
-            responseData.message = message
-        }
-        return sendResponse(res, StatusCodes.OK, null, {responseData})
+    async clearCart(req, res, next){
+        const userId = req.user._id;
+        const cart = await CartModel.findOne({userId})
+        if(!cart) throw new httpErrors.NotFound(CartMsg.CartNFound)
+        cart.items = []
+        cart.totalQuantity = 0
+        cart.totalPrice = 0
+        await cart.save()
+        return sendResponse(res, StatusCodes.OK, CartMsg.CartCleared, {cart})
     }
+
 }
 
 module.exports = {

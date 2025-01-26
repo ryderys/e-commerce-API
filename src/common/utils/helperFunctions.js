@@ -336,37 +336,59 @@ async function findProductById(productId){
   return product
 }
 
-async function validateCart(cart){
+
+
+async function validateCart(cart) {
   try {
-    if(!cart.items || cart.items.length === 0) return cart
+    if(!cart.items || cart.items.length === 0){
+      return {validCart: cart, removedItems: []}
+    }
+    
     const productIds = cart.items.map(item => item.productId)
-
     const products = await ProductModel.find({_id: {$in: productIds}})
-    const productMap = new Map(products.map((product) => [product._id.toString(), product]))
-
-    // Identify invalid items
+    // Map product IDs to their database values
+    const productMap = new Map(products.map(product => [product._id.toString(), product]))
     const invalidItems = []
+    const validItems = []
+    
+    // Iterate over cart items and validate them
     for (const item of cart.items) {
-      const product = productMap.get(item.productId.toString())
-      if(!product || product.count < item.quantity){
-        invalidItems.push(item)
+
+
+      const product = productMap.get(item.productId._id.toString())
+      if(!product){
+        // Product no longer exists
+        invalidItems.push({
+          productId: item.productId,
+          reason: "product Not Found"
+        })
+      }else if(Number(product.count) < Number(item.quantity)){
+        console.log(`Product count: ${product.count}, Requested quantity: ${item.quantity}`);
+        // Insufficient stock
+        invalidItems.push({
+          productId: item.productId,
+          title: product.title,
+          availableStock: product.count,
+          requestedQuantity: item.quantity,
+          reason: "Insufficient stock"
+        })
+      } else {
+        // Valid item
+        validItems.push(item)
       }
     }
 
-    // Remove invalid items from the cart
-    
-    if(invalidItems.length > 0){
-      cart.items = cart.items.filter(
-        (item) => !invalidItems.some((invalid) => invalid.productId.equals(item.productId))
-      )
-      await cart.save()
-    }
-    return cart
-  } catch (error) {
-    throw new Error("cart validation failed")
-  }
+    cart.items = validItems;
+    cart.totalQuantity = validItems.reduce((sum, item) => sum + item.quantity, 0);
+    cart.totalPrice = validItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
+
+    return {validCart: cart, invalidItems}
+  } catch (error) {
+    throw new Error("Cart validation failed")
+  }
 }
+
 
 async function expireCart(cart, expiresAt){
   try {
@@ -377,7 +399,7 @@ async function expireCart(cart, expiresAt){
     cart.expiresAt = expiresAt
     await cart.save()
   } catch (error) {
-    throw new error("failed to set the cart expiration date")
+    throw new Error("failed to set the cart expiration date")
   }
 }
 
