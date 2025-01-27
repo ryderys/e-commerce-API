@@ -2,7 +2,7 @@ const autoBind = require("auto-bind");
 const { CartModel } = require("./cart.model");
 const httpErrors = require("http-errors");
 const { CartMsg } = require("./cart.msg");
-const { AddToCartSchema, RemoveFromCartSchema } = require("../../common/validations/cart.validation");
+const { AddToCartSchema, RemoveFromCartSchema, QuantitySchema } = require("../../common/validations/cart.validation");
 const ObjectIdValidator = require("../../common/validations/public.validation");
 const { findProductById, validateCart, expireCart, sendResponse } = require("../../common/utils/helperFunctions");
 const { StatusCodes } = require("http-status-codes");
@@ -94,17 +94,28 @@ class CartController{
 
     async removeItemFromCart(req, res, next){
         try {
+            
             await RemoveFromCartSchema.validateAsync(req.params)
+            await QuantitySchema.validateAsync(req.query)
             const {productId} = req.params;
+            const {quantity} = req.query;
             if(!req.user || !req.user._id) throw new httpErrors.Unauthorized(CartMsg.UserNotFound)
             const userId = req.user._id;
 
-            const cart = await CartModel.findOneAndUpdate(
-                {userId},
-                { $pull: {items: {productId}}},
-                { new: true}
-            )
+            const cart = await CartModel.findOne({userId})
             if(!cart) throw new httpErrors.NotFound(CartMsg.CartNFound)
+            
+            const productIndex = cart.items.findIndex(item => item.productId.toString() === productId)
+            if (productIndex === -1) throw new httpErrors.NotFound(CartMsg.ProductNFound)
+            
+            const product = cart.items[productIndex]
+
+            if(quantity >= product.quantity){
+                cart.items.splice(productIndex, 1)
+            }else {
+                product.quantity -= quantity
+            }
+
             cart.totalQuantity = cart.items.reduce((sum, item) => sum + item.quantity, 0);
             cart.totalPrice = cart.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
             await cart.save();

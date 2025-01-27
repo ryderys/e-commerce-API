@@ -14,9 +14,13 @@ const UpdateItemQuantitySchema = Joi.object({
 const RemoveFromCartSchema = Joi.object({
     productId: Joi.string().required().error(httpErrors.BadRequest(ValidationMsg.InvalidId)),
 })
+const QuantitySchema = Joi.object({
+    quantity: Joi.number().integer().min(1).required().error(httpErrors.BadRequest(ValidationMsg.InvalidQuantity))
+})
 
 module.exports = {
     AddToCartSchema,
     UpdateItemQuantitySchema,
-    RemoveFromCartSchema
+    RemoveFromCartSchema,
+    QuantitySchema
 }

@@ -134,6 +134,12 @@
  *              schema:
  *                  type: string
  *              description: ID of the product to remove from the cart
+ *          -   in: query
+ *              name: quantity
+ *              required: false
+ *              schema:
+ *                  type: number
+ *              description: the quantity of the product you want to remove
  *      responses:
  *          200:
  *              description: item removed from cart successfully
