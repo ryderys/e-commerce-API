@@ -3,6 +3,7 @@ const { CartRoutes } = require("./modules/cart/cart.routes");
 const { CategoryRoutes } = require("./modules/category/category.routes");
 const { FeatureRoutes } = require("./modules/features/features.routes");
 const { ProductRoutes } = require("./modules/products/product.routes");
+const { SavedItemRoutes } = require("./modules/savedItems/savedItem.routes");
 
 const mainRouter = require("express").Router();
 
@@ -11,6 +12,7 @@ mainRouter.use("/product", ProductRoutes)
 mainRouter.use("/category", CategoryRoutes)
 mainRouter.use("/feature", FeatureRoutes)
 mainRouter.use("/cart", CartRoutes)
+mainRouter.use("/bookmark", SavedItemRoutes)
 
 module.exports = {
     mainRouter
