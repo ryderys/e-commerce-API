@@ -289,13 +289,6 @@ class ProductController {
             next(error)
         }
     }
-
-    
-
-    
-
-    
-
    
 }
 

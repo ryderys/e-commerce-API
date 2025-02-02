@@ -15,13 +15,9 @@ const ProductSchema = new mongoose.Schema({
     count: {type: Number, default: 0, min: 0},
     images: {type: [String], required: false, default: []},
     supplier: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
-    // features: [{
-    //     feature: {type: String, required: true }, // Color, Size
-    //     values: {type: [String], required: true} // ['red', 'blue']
-    // }],
     features: [FeatureSchema],
     averageRating: {type: Number, default: 0, min: 0, max: 5},
-    reviewCount: {type: Number, default: 0},
+    reviewCount: {type: Number, default: 0, min: 0},
 }, {
     timestamps: true,
     versionKey: false
