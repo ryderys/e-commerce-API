@@ -14,6 +14,7 @@ const { ProductModel } = require("../../modules/products/product.model")
 const { CartMsg } = require("../../modules/cart/cart.msg")
 const { ProductMsg } = require("../../modules/products/product.msg")
 const { default: mongoose } = require("mongoose")
+const { ReviewModel } = require("../../modules/reviews/reviews.model")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message = null , data = {}) => {
@@ -402,6 +403,9 @@ async function expireCart(cart, expiresAt){
     throw new Error("failed to set the cart expiration date")
   }
 }
+
+//REVIEWS HELPER FUNCTIONS___________
+
 
 
 
