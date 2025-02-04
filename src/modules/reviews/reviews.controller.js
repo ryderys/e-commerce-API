@@ -5,11 +5,16 @@ const {ProductModel} = require("../products/product.model");
 const { sendResponse } = require("../../common/utils/helperFunctions");
 const { StatusCodes } = require("http-status-codes");
 const { default: mongoose } = require("mongoose");
+const { addReviewSchema, getReviewSchema, deleteReviewSchema, updateReviewSchema } = require("../../common/validations/reviews.validation");
 class ReviewController{
 
     
     async addReview(req, res, next){
         try {
+            const {error} = addReviewSchema.validate({params: req.params, body: req.body}, {abortEarly: false})
+            if(error){
+                throw new httpError.BadRequest(error.message)
+            }
             const { rating, comment} = req.body;
             const {productId} = req.params;
             const userId = req.user._id;
@@ -58,6 +63,10 @@ class ReviewController{
 
     async getReviews(req, res, next){
         try {
+            const {error} = getReviewSchema.validate({params: req.params}, {abortEarly: false})
+            if(error){
+                throw new httpError.BadRequest(error.message)
+            }
             const {productId} = req.params;
             const reviews = await ReviewModel.find({productId}).populate('userId', 'name email phone')
             .sort({createdAt: -1})
@@ -69,6 +78,10 @@ class ReviewController{
 
     async deleteReview(req, res, next){
         try {
+            const {error} = deleteReviewSchema.validate({params: req.params}, {abortEarly: false})
+            if(error){
+                throw new httpError.BadRequest(error.message)
+            }
             const userId = req.user._id;
             const {reviewId} = req.params;
             const review = await ReviewModel.findById(reviewId)
@@ -112,6 +125,10 @@ class ReviewController{
 
     async updateReview(req, res, next){
         try {
+            const {error} = updateReviewSchema.validate({params: req.params, body: req.body}, {abortEarly: false})
+            if(error){
+                throw new httpError.BadRequest(error.message)
+            }
             const {reviewId} = req.params;
             const {rating, comment} = req.body;
             const userId = req.user._id;

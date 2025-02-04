@@ -18,7 +18,8 @@ const ValidationMsg = {
     InvalidKey: 'Invalid key',
     InvalidList: 'list must be array or comma-separated string',
     InvalidGuid: 'the type of the sent guid is invalid',
-
+    InvalidRating: 'rating must be a number and be at least 1 and cannot exceed 5',
+    InvalidComment: 'comment must be an string less than 400 characters long'
 }
 
 module.exports = {
