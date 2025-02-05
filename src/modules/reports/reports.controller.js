@@ -34,15 +34,32 @@ class ReportController{
         }
     }
 
-    async getReport(req, res, next){
+    async getReportById(req, res, next){
         try {
             const {reportId} = req.params;
         
             const report = await ReportModel.findById(reportId)
                 .populate('reporter', 'name email')
                 .populate('reviewId')
-                
-            return sendResponse(res, StatusCodes.OK, null, {report})
+            const response = {
+                reportId: report._id,
+                reporterId: report.reporter._id,
+                reporterName: report.reporter?.name,
+                reporterEmail: report.reporter?.email,
+                reviewId: report.reviewId._id,
+                userId: report.reviewId.userId,
+                productId: report.reviewId.productId,
+                reviewRating: report.reviewId.rating,
+                reviewComment: report.reviewId.comment,
+                isReviewEdited: report.reviewId.edited,
+                reviewCreatedAt: report.reviewId.createdAt,
+                reason: report.reason,
+                description: report.description,
+                status: report.status,
+                createdAt: report.createdAt,
+                updatedAt: report.updatedAt
+            }
+            return sendResponse(res, StatusCodes.OK, null, {report: response})
         } catch (error) {
             next(error)
         }
@@ -52,8 +69,21 @@ class ReportController{
 
             const reportedReviews = await ReportModel.find({status: 'pending'})
             .populate('reporter', 'name email')
-            .populate('reviewId')
+            .populate('reviewId', 'userId productId rating comment createdAt')
             .sort('-createdAt')
+            // const response = {
+            //     reportId: reportedReviews._id,
+            //     reporterId: reportedReviews.reporter,
+            //     reviewRating: reportedReviews.reviewId.rating,
+            //     reviewComment: reportedReviews.reviewId.comment,
+            //     reviewCreatedAt: reportedReviews.reviewId.reviewCreatedAt,
+            //     reason: reportedReviews.reason,
+            //     description: reportedReviews.description,
+            //     status: reportedReviews.status,
+            //     createdAt: reportedReviews.createdAt,
+            //     updatedAt: reportedReviews.updatedAt
+            // }
+            // console.log(response)
             return sendResponse(res, StatusCodes.OK, null, {reportedReviews})
         } catch (error) {
             next(error)

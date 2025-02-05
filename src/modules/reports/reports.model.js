@@ -6,8 +6,8 @@ const ReportSchema = new mongoose.Schema({
     reason: {type: String, enum: ['spam', 'inappropriate', 'false_info', 'other'], required: true},
     description: {type: String, trim: true},
     edited: {type: Boolean, default: false},
-    status: {type: String, enum: ['pending', 'resolved'], default: 'pending'},
-    action: {type: String, enum: ['remove', 'keep'], required: true},
+    status: {type: String, enum: ['pending', 'resolved', 'rejected'], default: 'pending'},
+    action: {type: String, enum: ['remove', 'keep']},
     resolvedBy: {type: mongoose.Schema.Types.ObjectId, ref: "User"}
 }, {
     timestamps: true,
