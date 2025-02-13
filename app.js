@@ -4,10 +4,11 @@ const { NotFoundHandler, ErrorHandler } = require('./src/common/utils/errorohand
 const { setupSwagger } = require('./src/config/swagger.config');
 const cookieParser = require("cookie-parser")
 const path = require("path")
+const cors = require("cors")
 const app = express()
-
 app.use(cookieParser())
 app.use(express.json())
+app.use(cors())
 app.use(express.urlencoded({extended: true}))
 app.use("/public",express.static(path.join(process.cwd(), "public")))
 app.use(mainRouter)

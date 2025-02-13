@@ -12,11 +12,12 @@ class ReportController{
             const { reason, description} = req.body;
             const reporter = req.user._id;
 
-            const reviewExists = await ReviewModel.exists({_id: reviewId})
-            if(!reviewExists){
-                throw new httpError.NotFound(ReportMsg.ReviewNFound)
-            }
+            const review = await ReviewModel.findById(reviewId).select('hidden').lean()
+            if(!review) throw new httpError.NotFound(ReportMsg.ReviewNFound)
+            if(review.hidden) throw new httpError.Gone(ReportMsg.AlreadyResolved)
+            
 
+            
             const existingReport = await ReportModel.findOne({reviewId, reporter})
             if(existingReport){
                 throw new httpError.Conflict(ReportMsg.ReportExists)
@@ -25,10 +26,17 @@ class ReportController{
             const report = await ReportModel.create({
                 reviewId,
                 reporter,
-                reason,
-                description
+                reason: reason.trim(),
+                description: description?.trim()
             })
-            return sendResponse(res, StatusCodes.CREATED, ReportMsg.ReportCreated, {report})
+            return sendResponse(res, StatusCodes.CREATED, ReportMsg.ReportCreated, {
+                report: {
+                    id: report._id,
+                    status: report.status,
+                    createdAt: report.createdAt,
+                }
+            
+            })
         } catch (error) {
             next(error)
         }
@@ -40,24 +48,30 @@ class ReportController{
         
             const report = await ReportModel.findById(reportId)
                 .populate('reporter', 'name email')
-                .populate('reviewId')
+                .populate({
+                    path: 'reviewId',
+                    select: 'userId productId rating comment createdAt hidden',
+                    populate: {
+                        path: 'userId',
+                        select: 'name'
+                    }
+                })
+                if(!report) throw new httpError.NotFound(ReportMsg.ReportNFound)
+
             const response = {
                 reportId: report._id,
-                reporterId: report.reporter._id,
-                reporterName: report.reporter?.name,
-                reporterEmail: report.reporter?.email,
-                reviewId: report.reviewId._id,
-                userId: report.reviewId.userId,
-                productId: report.reviewId.productId,
-                reviewRating: report.reviewId.rating,
-                reviewComment: report.reviewId.comment,
-                isReviewEdited: report.reviewId.edited,
-                reviewCreatedAt: report.reviewId.createdAt,
                 reason: report.reason,
-                description: report.description,
                 status: report.status,
                 createdAt: report.createdAt,
-                updatedAt: report.updatedAt
+                review: {
+                    id: report.reviewId._id,
+                    rating: report.reviewId.rating,
+                    comment: report.reviewId.comment,
+                    author: report.reviewId.userId.name,
+                    createdAt: report.reviewId.createdAt,
+                    hidden: report.reviewId.hidden,
+                    
+                }
             }
             return sendResponse(res, StatusCodes.OK, null, {report: response})
         } catch (error) {
@@ -68,22 +82,18 @@ class ReportController{
         try {
 
             const reportedReviews = await ReportModel.find({status: 'pending'})
-            .populate('reporter', 'name email')
-            .populate('reviewId', 'userId productId rating comment createdAt')
+            .populate([
+                {path: 'reporter', select: 'name'},
+                {
+                    path: 'reviewId',
+                    select: 'rating comment createdAt',
+                    populate: {
+                        path: 'userId',
+                        select: 'name'
+                    }
+                }
+            ])
             .sort('-createdAt')
-            // const response = {
-            //     reportId: reportedReviews._id,
-            //     reporterId: reportedReviews.reporter,
-            //     reviewRating: reportedReviews.reviewId.rating,
-            //     reviewComment: reportedReviews.reviewId.comment,
-            //     reviewCreatedAt: reportedReviews.reviewId.reviewCreatedAt,
-            //     reason: reportedReviews.reason,
-            //     description: reportedReviews.description,
-            //     status: reportedReviews.status,
-            //     createdAt: reportedReviews.createdAt,
-            //     updatedAt: reportedReviews.updatedAt
-            // }
-            // console.log(response)
             return sendResponse(res, StatusCodes.OK, null, {reportedReviews})
         } catch (error) {
             next(error)
@@ -109,6 +119,7 @@ class ReportController{
             if(report.status === 'resolved'){
                 throw new httpError.BadRequest(ReportMsg.AlreadyResolved)
             }
+
             report.status = status
             report.edited = true
             report.resolvedBy = adminId
