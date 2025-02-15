@@ -1,0 +1,149 @@
+const { CartModel } = require("../cart/cart.model");
+const httpError = require("http-errors");
+const { OrderMsg } = require("./order.msg");
+const { shippingSchema } = require("../../common/validations/order.validation");
+const { ProductModel } = require("../products/product.model");
+const { OrderModel } = require("./order.model");
+const { sendResponse } = require("../../common/utils/helperFunctions");
+const { StatusCodes } = require("http-status-codes");
+const autoBind = require("auto-bind");
+
+class OrderController {
+    constructor() {
+        autoBind(this)
+    }
+
+    async createOrder(req, res, next){
+        try {
+             // Create order from cart
+            const userId = req.user._id;
+
+            // 1. Validate shipping information
+            const {error, value} = shippingSchema.validate(req.body);
+            if(error) throw new httpError.BadRequest(error.details[0].message)
+                // 2. Get and validate cart
+            const cart = await CartModel.findOne({userId})
+            .populate('items.productId')
+
+            if(!cart || cart.items.length === 0) throw new httpError.NotFound(OrderMsg.CartNFound)
+            // 3. Validate cart items and stock
+            const validItems = []
+            const invalidItems = []
+
+            for (const item of cart.items) {
+                const numericQuantity = Number(item.quantity)
+                if (isNaN(numericQuantity) || numericQuantity <= 0) {
+                    invalidItems.push(item.productId._id);
+                    continue;
+                  }
+                
+                const product = item.productId
+                if (!product || product.count < numericQuantity) {
+                    invalidItems.push(item.productId._id);
+                    continue
+                }
+                validItems.push({
+                    product: product._id,
+                    quantity: numericQuantity,
+                    price: product.price
+                })
+            }
+
+            if(invalidItems.length > 0){
+                throw new httpError.BadGateway(OrderMsg.InvalidItems, {invalidItems})
+            }
+
+            // 4. Calculate total amount
+
+            const totalAmount = validItems.reduce((sum, item) => sum + (item.quantity * item.price), 0)
+            // 5. Create order
+
+            const order = new OrderModel({
+                user: userId,
+                products: validItems,
+                totalAmount,
+                shippingInfo: {
+                    address: value.address,
+                    city: value.city,
+                    state: value.state,
+                    zipCode: value.zipCode,
+                    country: value.country,
+                },
+                paymentMethod: value.paymentMethod
+            })
+
+            // 6. Update product stock
+
+            const bulkOps = validItems.map(item => ({
+                updateOne: {
+                    filter: { _id: item.product},
+                    update: { $inc: { count: -item.quantity}}
+                }
+            }))
+
+            await ProductModel.bulkWrite(bulkOps);
+
+            const updatedItems = cart.items.map(item => {
+                const validItem = validItems.find(vItem => vItem.product.toString() === item.productId._id.toString())
+                if(validItem){
+                    item.quantity -= validItem.quantity
+                }
+                return item
+            }).filter(item => item.quantity > 0)
+
+            const totalQuantity = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
+
+            // 7. Save order and clear cart
+            await order.save()
+
+            await CartModel.findByIdAndUpdate(cart._id, 
+                { $set: {items: [], totalPrice: 0, totalQuantity}}
+            )
+        
+            return sendResponse(res, StatusCodes.CREATED, OrderMsg.OrderCreated, {
+                order: this._formatOrder(order)
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getOrder(req, res, next){
+        try {
+            const orders = await OrderModel.find({user: req.user._id})
+                .populate('products.product', 'name price images')
+                .sort('-createdAt')
+            return sendResponse(res, StatusCodes.OK, {orders: orders.map(order => this._formatOrder(order))})
+        } catch (error) {
+            next(error)
+        }
+    }
+    _formatOrder(order) {
+        return {
+          id: order._id,
+          status: order.status,
+          createdAt: order.createdAt,
+          totalAmount: order.totalAmount,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
+          trackingNumber: order.trackingNumber,
+          shippingInfo: order.shippingInfo,
+          products: order.products.map(item => ({
+            product: {
+              id: item.product._id,
+              name: item.product.title,
+              price: item.product.price,
+              images: item.product.images
+            },
+            quantity: item.quantity,
+            price: item.price
+          }))
+        };
+      }
+    
+}
+
+
+module.exports = {
+    OrderController: new OrderController()
+}
