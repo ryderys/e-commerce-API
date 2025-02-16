@@ -1,7 +1,7 @@
 const { CartModel } = require("../cart/cart.model");
 const httpError = require("http-errors");
 const { OrderMsg } = require("./order.msg");
-const { shippingSchema } = require("../../common/validations/order.validation");
+const { shippingSchema, StatusSchema } = require("../../common/validations/order.validation");
 const { ProductModel } = require("../products/product.model");
 const { OrderModel } = require("./order.model");
 const { sendResponse } = require("../../common/utils/helperFunctions");
@@ -153,6 +153,27 @@ class OrderController {
 
             await ProductModel.bulkWrite(bulkOps)
             return sendResponse(res, StatusCodes.OK, OrderMsg.OrderCancelled, {order: this._formatOrder(order)})
+        } catch (error) {
+            next(error)
+        }
+    }
+    
+    async updateOrderStatus(req, res, next){
+        try {
+            const {orderId} = req.params
+            const {error, value} = StatusSchema.validate(req.body)
+            if(error) throw new httpError.BadRequest(error.details[0].message)
+
+            const order = await OrderModel.findByIdAndUpdate(orderId, {
+                status: value.status,
+                ...(value.trackingNumber && {trackingNumber: value.trackingNumber})
+            },
+            { new: true}
+            )
+
+            if(!order) throw new httpError.NotFound(OrderMsg.OrderNFound)
+            return sendResponse(res, StatusCodes.OK, OrderMsg.OrderUpdated, {order: this._formatOrder(order)})
+            
         } catch (error) {
             next(error)
         }

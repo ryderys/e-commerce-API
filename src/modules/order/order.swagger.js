@@ -282,3 +282,47 @@
  *          500:
  *              description: Internal Server Error
  */
+
+/**
+ * @swagger
+ * /order/{orderId}/status:
+ *  patch:
+ *      summary: update order status (Admin only)
+ *      tags: [Order]
+ *      parameters:
+ *          -   in: path
+ *              name: orderId
+ *              required: true
+ *              schema:
+ *                  type: string
+ *              description: the id of the order
+ *      requestBody:
+ *          required: true
+ *          content:
+ *              application/x-www-form-urlencoded:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          status:
+ *                              type: string
+ *                              enum: ['processing', 'shipped', 'delivered']
+ *                          trackingNumber:
+ *                              type: string
+ *      responses:
+ *          200:
+ *              description:   Order status updated
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          $ref: '#/components/schemas/OrderResponse'
+ *          400:
+ *              description: Invalid status update
+ *          401:
+ *              description: unauthorized
+ *          403:
+ *              description: forbidden
+ *          404:
+ *              description: order not found
+ *          500:
+ *              description: Internal Server Error
+ */
