@@ -111,33 +111,73 @@ class OrderController {
     async getOrder(req, res, next){
         try {
             const orders = await OrderModel.find({user: req.user._id})
-                .populate('products.product', 'name price images')
+                .populate('products.product', 'title price images')
                 .sort('-createdAt')
-            return sendResponse(res, StatusCodes.OK, {orders: orders.map(order => this._formatOrder(order))})
+            return sendResponse(res, StatusCodes.OK, null, {orders: orders.map(order => this._formatOrder(order))})
         } catch (error) {
             next(error)
         }
     }
+    async getOrderDetails(req, res, next){
+        try {
+            const {orderId} = req.params
+            const order = await OrderModel.findById(orderId)            
+                .populate('products.product', 'title summary category')
+                // .populate('user', 'name email mobile') 
+            if(!order) throw new httpError.NotFound(OrderMsg.OrderNFound)
+            return sendResponse(res, StatusCodes.OK, null, {order: this._formatOrder(order)})
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async cancelOrder(req, res, next){
+        try {
+            const order = await OrderModel.findByIdAndUpdate(
+                {
+                    _id: req.params.orderId,
+                    user: req.user._id,
+                    status: 'pending'
+                },
+                {status: 'canceled'},
+                {new: true}
+                ).populate('products.product')
+
+            if(!order) throw new httpError.NotFound(OrderMsg.OrderNFound)
+            const bulkOps = order.products.map(item => ({
+                updateOne: {
+                    filter: { _id: item.product._id},
+                    update: { $inc: {count: item.quantity}}
+                }
+            }))
+
+            await ProductModel.bulkWrite(bulkOps)
+            return sendResponse(res, StatusCodes.OK, OrderMsg.OrderCancelled, {order: this._formatOrder(order)})
+        } catch (error) {
+            next(error)
+        }
+    }
+
     _formatOrder(order) {
         return {
           id: order._id,
           status: order.status,
           createdAt: order.createdAt,
-          totalAmount: order.totalAmount,
           paymentMethod: order.paymentMethod,
           paymentStatus: order.paymentStatus,
           trackingNumber: order.trackingNumber,
           shippingInfo: order.shippingInfo,
           products: order.products.map(item => ({
-            product: {
-              id: item.product._id,
-              name: item.product.title,
-              price: item.product.price,
-              images: item.product.images
-            },
-            quantity: item.quantity,
-            price: item.price
-          }))
+              product: {
+                  id: item.product._id,
+                  name: item.product.title,
+                  price: item.product.price,
+                  images: item.product.images,
+                  quantity: item.quantity,
+                  price: item.price
+                },
+            })),
+            totalPrice: order.totalAmount,
         };
       }
     
