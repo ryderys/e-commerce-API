@@ -40,8 +40,13 @@ const UserSchema = new mongoose.Schema({
     },
     lastOtpRequest: {
         type: Date
+    },
+    role: {
+        type: String,
+        enum: ["user", "admin", "guest"],
+        default: "guest"
     }
-}, {timestamps: true})
+}, {timestamps: true, versionKey: false})
 
 
 
