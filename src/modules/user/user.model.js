@@ -43,9 +43,16 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["user", "admin", "guest"],
-        default: "guest"
+        enum: ['admin', 'user', 'guest'],
+        default: 'guest'
     }
+    // roles: [{
+    //     type: mongoose.Types.ObjectId, ref: "Role",
+    //     default: "guest"
+    // }],
+    // directPermissions: [{
+    //     type: mongoose.Types.ObjectId, ref: "Permission"
+    // }]
 }, {timestamps: true, versionKey: false})
 
 
