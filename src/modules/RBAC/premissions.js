@@ -7,7 +7,7 @@ const Permissions = Object.freeze({
     },
     category: {
         create: ['admin'],
-        read: ['admin', 'user'],
+        read: ['user'],
         update: ['admin'],
         delete: ['admin'],
     },

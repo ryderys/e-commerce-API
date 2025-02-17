@@ -19,7 +19,9 @@ const ValidationMsg = {
     InvalidList: 'list must be array or comma-separated string',
     InvalidGuid: 'the type of the sent guid is invalid',
     InvalidRating: 'rating must be a number and be at least 1 and cannot exceed 5',
-    InvalidComment: 'comment must be an string less than 400 characters long'
+    InvalidComment: 'comment must be an string less than 400 characters long',
+    InvalidRole: 'assigned role is invalid',
+    InvalidPermission: 'permissions are invalid',
 }
 
 module.exports = {
