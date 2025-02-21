@@ -46,7 +46,8 @@ const UserSchema = new mongoose.Schema({
         ref: 'Role',
     }],
     directPermissions: [{
-        type: String
+        type: mongoose.Types.ObjectId,
+        default: []
     }],
 
 }, {timestamps: true, versionKey: false})

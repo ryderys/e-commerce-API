@@ -24,6 +24,7 @@ RbacRoutes.put("/permissions/assign/:roleId", PermissionController.assignPermiss
 RbacRoutes.get("/permissions", PermissionController.getAllPermissions)
 
 
+RbacRoutes.delete("/permission/:permissionId", PermissionController.deletePermission)
 RbacRoutes.put("/permission/:roleId", PermissionController.updateRolePermissions)
 
 

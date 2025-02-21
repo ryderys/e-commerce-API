@@ -71,8 +71,7 @@
  *                      type: array
  *                      items:
  *                          type: string
- *                      example: ["1"]
- *                      description: A list of permission ObjectIds to be assigned to the role.
+ *                          description: A list of permission ObjectIds to be assigned to the role.
  *                  
  */
 
@@ -275,6 +274,24 @@
  *              description: Role not found
  */
 
+/**
+ * @swagger
+ * /rbac/permission/{permissionId}:
+ *  delete:
+ *      summary: delete a permission
+ *      tags: [RBAC]
+ *      parameters:
+ *          -   in: path
+ *              name: permissionId
+ *              required: true
+ *              description: the ID of the permission
+ *      responses:
+ *          200:
+ *              description: permission deleted successfully
+ *          404:
+ *              description: permission not found
+ */
+
 
 /**
  * @swagger
@@ -282,11 +299,6 @@
  *  post:
  *      summary: Grant direct permissions to a user
  *      tags: [RBAC]
- *      parameters:
- *          -   in: path
- *              name: roleId
- *              required: true
- *              description: the ID of the role
  *      requestBody:
  *          required: true
  *          content:

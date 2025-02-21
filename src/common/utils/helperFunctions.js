@@ -15,6 +15,7 @@ const { CartMsg } = require("../../modules/cart/cart.msg")
 const { ProductMsg } = require("../../modules/products/product.msg")
 const { default: mongoose } = require("mongoose")
 const { ReviewModel } = require("../../modules/reviews/reviews.model")
+const { PermissionModel } = require("../../modules/RBAC/permission.model")
 const fs = require("fs").promises;
 
 const sendResponse = (res, statusCode, message = null , data = {}) => {
@@ -407,7 +408,14 @@ async function expireCart(cart, expiresAt){
 //REVIEWS HELPER FUNCTIONS___________
 
 
+const getPermissionsByIds = async (permissionIds) => {
+  if (!permissionIds || permissionIds.length === 0) {
+      return [];
+  }
 
+  // Find permissions by their ObjectIds
+  return PermissionModel.find({ '_id': { $in: permissionIds } });
+};
 
 module.exports = {
     sendResponse,
@@ -428,5 +436,6 @@ module.exports = {
     findProductById,
     validateCart,
     expireCart,
-    formatProductFeatures
+    formatProductFeatures,
+    getPermissionsByIds
 }

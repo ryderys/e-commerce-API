@@ -10,6 +10,7 @@ const { OrderModel } = require("../../modules/order/order.model");
 const { CartModel } = require("../../modules/cart/cart.model");
 const { SavedItemsModel } = require("../../modules/savedItems/savedItem.model");
 const { RoleModel } = require("../../modules/RBAC/roles.model");
+const { getPermissionsByIds } = require("../utils/helperFunctions");
 
 
 const checkPermissions = (resource, action) => {
@@ -19,11 +20,19 @@ const checkPermissions = (resource, action) => {
             if (!userRoles.length) {
                 throw new createHttpError.BadRequest("No roles found");
             }
-
+            
             let hasPermission = false;
             const visitedRoles = new Set();
 
-            // Check each role in the user's roles
+            const permissions  = await getPermissionsByIds(req.user?.directPermissions)
+            
+            if(permissions.some(permission => permission.resource === resource && permission.action.includes(action))){
+                hasPermission = true
+                return next()
+            }
+
+            if(!hasPermission){
+                // Check each role in the user's roles
             for (const role of userRoles) {
                 let currentRole = role;
                 let roleLevel = 0; // To limit depth in case of circular inheritance
@@ -70,6 +79,7 @@ const checkPermissions = (resource, action) => {
                 }
 
                 if (hasPermission) break;  // Break the loop if permission is found
+            }
             }
 
             // If the user has the permission, continue to the next middleware

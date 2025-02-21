@@ -10,7 +10,8 @@ const RbacMsg = {
     PermissionCreated: "permission created successfully",
     InheritanceAdded: "inheritance added",
     InvalidPermission: "Some permissions are invalid.",
-    PermissionAssigned: 'Permissions assigned to role successfully'
+    PermissionAssigned: 'Permissions assigned to role successfully',
+    PermissionDeleted: 'permission deleted successfully'
 }
 
 module.exports = {
