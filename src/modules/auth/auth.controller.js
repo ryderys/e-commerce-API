@@ -6,6 +6,7 @@ const {StatusCodes} = require("http-status-codes")
 const {sendResponse, verifyRefreshToken, signToken, hashingUtils, setToken } = require("../../common/utils/helperFunctions");
 const crypto = require("crypto");
 const CookieNames = require("../../common/constants/cookieEnum");
+const { RoleModel } = require("../RBAC/roles.model");
 
 class UserAuthController {
     async getOTP(req, res, next) {
@@ -77,6 +78,22 @@ class UserAuthController {
             
             if(!user.verifiedMobile) {
                 user.verifiedMobile = true
+            }
+
+            if(user.roles.length === 0){
+                const guestRole = await RoleModel.findOne({role: 'guest'}).select('_id')
+
+                if(!guestRole){
+                    const newGuestRole = new RoleModel({
+                        role: 'guest',
+                        permissions: [],
+                        inherits: []
+                    })
+                    await newGuestRole.save()
+                    user.roles.push(newGuestRole._id)
+                } else {
+                    user.roles.push(guestRole._id)
+                }
             }
             const accessToken = signToken.signAccessToken({mobile, id: user._id})
             const refreshToken = signToken.signRefreshToken({mobile, id: user._id})

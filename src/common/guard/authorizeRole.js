@@ -1,6 +1,7 @@
 const httpErrors = require("http-errors");
 const jwt = require("jsonwebtoken");
 const { UserModel } = require("../../modules/user/user.model");
+const { AuthMSG } = require("../../modules/auth/auth.msg");
 
 const adminAuthMiddleware = async(req, res, next) => {
     try {
@@ -15,7 +16,7 @@ const adminAuthMiddleware = async(req, res, next) => {
                 updatedAt:0,
                 verifiedMobile:0
             }).lean()
-            if(!user || user.role !== 'admin') throw new httpErrors.Unauthorized('admin access only')
+            if(!user || user.roles !== 'admin') throw new httpErrors.Unauthorized('admin access only')
             req.user = user
             return next()
             }

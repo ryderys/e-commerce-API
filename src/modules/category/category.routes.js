@@ -6,9 +6,9 @@ const Authentication = require("../../common/guard/authentication")
 
 const CategoryRoutes = Router()
 
-CategoryRoutes.post("/add", adminAuthMiddleware, checkPermissions('category', 'create'),  CategoryController.createCategory)
+CategoryRoutes.post("/add", Authentication, checkPermissions('category', 'create') ,CategoryController.createCategory)
 
-CategoryRoutes.get("/all", CategoryController.getAllCategories)
+CategoryRoutes.get("/all",Authentication , checkPermissions('category', 'read'),CategoryController.getAllCategories)
 
 CategoryRoutes.delete("/remove/:id", adminAuthMiddleware, checkPermissions('category', 'delete'), CategoryController.deleteCategoryById)
 

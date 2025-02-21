@@ -22,6 +22,8 @@ const ValidationMsg = {
     InvalidComment: 'comment must be an string less than 400 characters long',
     InvalidRole: 'assigned role is invalid',
     InvalidPermission: 'permissions are invalid',
+    InvalidResource: 'the resource that you provided for granting permissions is invalid',
+    InvalidAction: 'the action that you provided for granting permissions is invalid',
 }
 
 module.exports = {

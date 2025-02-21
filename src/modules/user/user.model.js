@@ -41,11 +41,14 @@ const UserSchema = new mongoose.Schema({
     lastOtpRequest: {
         type: Date
     },
-    role: {
-        type: String,
-        enum: ['admin', 'user', 'guest'],
-        default: 'guest'
-    }
+    roles: [{
+        type: mongoose.Types.ObjectId,
+        ref: 'Role',
+    }],
+    directPermissions: [{
+        type: String
+    }],
+
 }, {timestamps: true, versionKey: false})
 
 
