@@ -1,6 +1,7 @@
 const RbacMsg = {
     RoleAssigned: "role assigned successfully",
     RoleNFound: "Role not found",
+    RoleDeleted: "Role deleted successfully",
     PermissionNFound: "permissions not found",
     PermissionNUpdated: "Role permissions not updated",
     PermissionUpdated: "Role permissions updated successfully",

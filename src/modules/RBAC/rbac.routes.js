@@ -9,6 +9,7 @@ RbacRoutes.post("/roles/create", RoleController.createRole)
 RbacRoutes.get("/roles", RoleController.getAllRoles)
 
 RbacRoutes.get("/roles/:roleId", RoleController.getRoleDetails)
+RbacRoutes.delete("/roles/:roleId", RoleController.deleteRole)
 
 RbacRoutes.put("/roles/:roleId/assign", RoleController.assignRoleToUser)
 

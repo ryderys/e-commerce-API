@@ -8,6 +8,7 @@ const { RbacRoutes } = require("./modules/RBAC/rbac.routes");
 const { ReportRoutes } = require("./modules/reports/reports.routes");
 const { ReviewRoutes } = require("./modules/reviews/reviews.routes");
 const { SavedItemRoutes } = require("./modules/savedItems/savedItem.routes");
+const { UserRoutes } = require("./modules/user/user.routes");
 
 const mainRouter = require("express").Router();
 
@@ -21,6 +22,7 @@ mainRouter.use("/review", ReviewRoutes)
 mainRouter.use("/report", ReportRoutes)
 mainRouter.use("/order", OrderRoutes)
 mainRouter.use('/rbac', RbacRoutes)
+mainRouter.use('/user', UserRoutes)
 
 module.exports = {
     mainRouter

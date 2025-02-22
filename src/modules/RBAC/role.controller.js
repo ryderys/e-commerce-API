@@ -107,6 +107,27 @@ class RoleController{
         }
     }
 
+    async deleteRole(req, res, next){
+        try {
+            const {roleId} = req.params;
+            
+            const role = await RoleModel.findById(roleId)
+            if(!role) throw new httpError.NotFound(RbacMsg.RoleNFound)
+
+            const usersWithRole = await UserModel.find({roles: roleId})
+            if(usersWithRole.length > 0){
+                await UserModel.updateMany(
+                    {roles: roleId},
+                    { $pull: {roles: roleId}}
+                )
+            }
+
+            await RoleModel.findByIdAndDelete(roleId)
+            return sendResponse(res, StatusCodes.OK, RbacMsg.RoleDeleted)
+        } catch (error) {
+            next(error)
+        }
+    }
    
 }
 

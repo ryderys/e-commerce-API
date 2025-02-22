@@ -122,6 +122,23 @@
  *          404:
  *              description: Role not found
  */
+/**
+ * @swagger
+ * /rbac/roles/{roleId}:
+ *  delete:
+ *      summary: delete a role by ID
+ *      tags: [RBAC]
+ *      parameters:
+ *          -   in: path
+ *              name: roleId
+ *              required: true
+ *              description: the ID of the role
+ *      responses:
+ *          200:
+ *              description: role deleted successfully
+ *          404:
+ *              description: Role not found
+ */
 
 /**
  * @swagger
