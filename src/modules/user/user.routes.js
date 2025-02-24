@@ -3,7 +3,7 @@ const { UserController } = require("./user.controller")
 
 const UserRoutes = require("express").Router()
 
-UserRoutes.get("/me", Authentication, UserController.getUserProfile)
+UserRoutes.get("/me", Authentication, UserController.getProfile)
 UserRoutes.get("/all", Authentication, UserController.getAllUsers) //admin access
 
 UserRoutes.patch('/me', Authentication, UserController.updateUserProfile)

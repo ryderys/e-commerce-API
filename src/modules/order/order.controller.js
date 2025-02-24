@@ -7,6 +7,8 @@ const { OrderModel } = require("./order.model");
 const { sendResponse } = require("../../common/utils/helperFunctions");
 const { StatusCodes } = require("http-status-codes");
 const autoBind = require("auto-bind");
+const { WalletModel } = require("../wallet/wallet.model");
+const { TransactionModel } = require("../transaction/transaction.model");
 
 class OrderController {
     constructor() {
@@ -58,6 +60,11 @@ class OrderController {
             const totalAmount = validItems.reduce((sum, item) => sum + (item.quantity * item.price), 0)
             // 5. Create order
 
+            const userWallet = await WalletModel.findOne({user: userId})
+            if(!userWallet|| userWallet.balance < totalAmount){
+                throw new httpError.BadRequest(OrderMsg.InsufficientFunds)
+            }
+
             const order = new OrderModel({
                 user: userId,
                 products: validItems,
@@ -69,8 +76,22 @@ class OrderController {
                     zipCode: value.zipCode,
                     country: value.country,
                 },
-                paymentMethod: value.paymentMethod
+                paymentMethod: value.paymentMethod,
+                paymentStatus: 'pending'
             })
+
+            const transaction = new TransactionModel({
+                amount: totalAmount,
+                type: 'purchase',
+                status: 'completed',
+                currency: userWallet.currency,
+                order: order._id
+            })
+            await transaction.save()
+
+            userWallet.balance -= totalAmount;
+            userWallet.transaction.push(transaction._id)
+            await userWallet.save()
 
             // 6. Update product stock
 
@@ -94,6 +115,7 @@ class OrderController {
             const totalQuantity = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
             // 7. Save order and clear cart
+            order.paymentStatus = 'completed'
             await order.save()
 
             await CartModel.findByIdAndUpdate(cart._id, 
@@ -101,7 +123,8 @@ class OrderController {
             )
         
             return sendResponse(res, StatusCodes.CREATED, OrderMsg.OrderCreated, {
-                order: this._formatOrder(order)
+                order: this._formatOrder(order),
+                walletBalance: userWallet.balance
             })
         } catch (error) {
             next(error)

@@ -5,7 +5,8 @@ const OrderMsg = {
     InvalidItems: "some items are unavailable",
     OrderCreated: "order created successfully",
     OrderCancelled: "order cancelled successfully",
-    OrderUpdated: "order status updated"
+    OrderUpdated: "order status updated",
+    InsufficientFunds: "insufficient funds to make this purchase"
 }
 
 module.exports = {
