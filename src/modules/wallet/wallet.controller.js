@@ -3,6 +3,7 @@ const { sendResponse } = require("../../common/utils/helperFunctions");
 const { WalletModel } = require("./wallet.model")
 const httpError = require("http-errors");
 const { WalletMsg } = require("./wallet.msg");
+const { TransactionModel } = require("../transaction/transaction.model");
 
 class WalletController{
     async getBalance(req, res, next){
@@ -20,21 +21,22 @@ class WalletController{
         try {
             const {amount, currency} = req.body
             const userId = req.user._id;
-            const wallet = await WalletModel.findOne({user: userId})
+            // const wallet = await WalletModel.findOne({user: userId})
             
-          
+            const transaction = new TransactionModel({
+                amount,
+                type: 'deposit',
+                status: 'completed',
+                currency,
+                description: 'funds added to wallet'
+            })
+
+            await transaction.save()
+
             const updatedWallet = await WalletModel.findOneAndUpdate(
                 {user: userId},
                 {
                     $inc: {balance: amount},
-                    $push: {
-                        transaction: {
-                            amount,
-                            type: 'deposit',
-                            status: 'completed',
-                            currency
-                        }
-                    }
                 },
                 {new: true, upsert: true}
             )
@@ -43,12 +45,12 @@ class WalletController{
                 _id: updatedWallet._id,
                 balance: updatedWallet.balance,
                 currency: updatedWallet.currency,
-                transaction: updatedWallet.transaction.map((txn) =>({
-                    amount: txn.amount,
-                    type: txn.type,
-                    status: txn.status,
-                    currency: txn.currency,
-                }))
+                // transaction: updatedWallet.transaction.map((txn) =>({
+                //     amount: txn.amount,
+                //     type: txn.type,
+                //     status: txn.status,
+                //     currency: txn.currency,
+                // }))
             }
 
             return sendResponse(res, StatusCodes.OK, WalletMsg.AddedFund, {wallet: responseWallet})
@@ -61,37 +63,54 @@ class WalletController{
         try {
             const {amount, currency} = req.body
             const userId = req.user._id;
-            const wallet = await WalletModel.findOne({user: userId})
-            if(!wallet || wallet.balance < amount){
-                throw new httpError.BadRequest(WalletMsg.NoBalance)
-            }
+            // const wallet = await WalletModel.findOne({user: userId})
+            // if(!wallet || wallet.balance < amount){
+            //     throw new httpError.BadRequest(WalletMsg.NoBalance)
+            // }
+
+            
+
             
             const updatedWallet = await WalletModel.findOneAndUpdate(
                 {user: userId},
                 {
                     $inc: {balance: -amount},
-                    $push: {
-                        transaction: {
-                            amount,
-                            type: 'withdrawal',
-                            status: 'completed',
-                            currency
-                        }
-                    }
+                    // $push: {
+                    //     transaction: {
+                    //         amount,
+                    //         type: 'withdrawal',
+                    //         status: 'completed',
+                    //         currency
+                    //     }
+                    // }
                 },
                 {new: true}
             )
+                if(!updatedWallet || updatedWallet.balance < amount){
+                    throw new httpError.BadRequest(WalletMsg.NoBalance)
+                }
+
+                const transaction = new TransactionModel({
+                    amount,
+                    type: 'withdrawal',
+                    status: 'completed',
+                    currency: updatedWallet.currency,
+                    description: 'funds withdrawn from wallet'
+                })
+
+                await transaction.save()
+
 
             const responseWallet = {
                 _id: updatedWallet._id,
                 balance: updatedWallet.balance,
                 currency: updatedWallet.currency,
-                transaction: updatedWallet.transaction.map((txn) =>({
-                    amount: txn.amount,
-                    type: txn.type,
-                    status: txn.status,
-                    currency: txn.currency,
-                }))
+                // transaction: updatedWallet.transaction.map((txn) =>({
+                //     amount: txn.amount,
+                //     type: txn.type,
+                //     status: txn.status,
+                //     currency: txn.currency,
+                // }))
             }
 
             return sendResponse(res, StatusCodes.OK, WalletMsg.WithdrawnFund, {wallet: responseWallet})

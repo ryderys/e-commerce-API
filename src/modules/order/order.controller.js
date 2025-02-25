@@ -80,18 +80,25 @@ class OrderController {
                 paymentStatus: 'pending'
             })
 
+            
+
+           await WalletModel.findOneAndUpdate(
+            {user: userId},
+            {
+                $inc: {balance: -totalAmount}
+            },
+            {new: true}
+            )
+
             const transaction = new TransactionModel({
                 amount: totalAmount,
                 type: 'purchase',
                 status: 'completed',
                 currency: userWallet.currency,
-                order: order._id
+                order: order._id,
+                description: `payment for order ${order._id}`
             })
             await transaction.save()
-
-            userWallet.balance -= totalAmount;
-            userWallet.transaction.push(transaction._id)
-            await userWallet.save()
 
             // 6. Update product stock
 
@@ -156,26 +163,56 @@ class OrderController {
 
     async cancelOrder(req, res, next){
         try {
-            const order = await OrderModel.findByIdAndUpdate(
+            const {orderId} = req.params;
+            const userId = req.user._id;
+            const order = await OrderModel.findOne(
                 {
-                    _id: req.params.orderId,
-                    user: req.user._id,
-                    status: 'pending'
-                },
-                {status: 'canceled'},
-                {new: true}
-                ).populate('products.product')
-
+                    _id: orderId,
+                    user: userId,
+                    status: { $in: ['pending', 'completed']}
+                }).populate('products.product')
+            
             if(!order) throw new httpError.NotFound(OrderMsg.OrderNFound)
+            
+            if(order.paymentStatus === 'completed'){
+                const userWallet = await WalletModel.findOne({user: req.user._id})
+                if(!userWallet) throw new httpError.BadRequest(OrderMsg.WalletNFound)
+
+                userWallet.balance += order.totalAmount;
+            
+                const refundTransaction = new TransactionModel({
+                    amount: order.totalAmount,
+                    type: 'refund',
+                    status: 'completed',
+                    currency: userWallet.currency,
+                    description: `refund for canceled order ${order._id}`,
+                    order: order._id
+                })
+                await refundTransaction.save()
+                await userWallet.save()
+            }
+        
+
             const bulkOps = order.products.map(item => ({
                 updateOne: {
                     filter: { _id: item.product._id},
                     update: { $inc: {count: item.quantity}}
                 }
             }))
-
             await ProductModel.bulkWrite(bulkOps)
-            return sendResponse(res, StatusCodes.OK, OrderMsg.OrderCancelled, {order: this._formatOrder(order)})
+
+            const updatedOrder = await OrderModel.findByIdAndUpdate(
+                orderId, 
+                {
+                    $set: {
+                        status: 'canceled',
+                        paymentStatus: order.paymentStatus === 'completed' ? 'refunded' : 'canceled'
+                    }
+                },
+                {new: true}
+            ).populate('products.product')
+            
+            return sendResponse(res, StatusCodes.OK, OrderMsg.OrderCancelled, {order: this._formatOrder(updatedOrder)})
         } catch (error) {
             next(error)
         }

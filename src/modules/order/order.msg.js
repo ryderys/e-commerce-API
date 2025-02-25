@@ -6,7 +6,8 @@ const OrderMsg = {
     OrderCreated: "order created successfully",
     OrderCancelled: "order cancelled successfully",
     OrderUpdated: "order status updated",
-    InsufficientFunds: "insufficient funds to make this purchase"
+    InsufficientFunds: "insufficient funds to make this purchase",
+    WalletNFound: 'user wallet not found'
 }
 
 module.exports = {
