@@ -28,7 +28,9 @@ class WalletController{
                 type: 'deposit',
                 status: 'completed',
                 currency,
-                description: 'funds added to wallet'
+                description: 'funds added to wallet',
+                order: null,
+                user: userId
             })
 
             await transaction.save()
@@ -63,27 +65,9 @@ class WalletController{
         try {
             const {amount, currency} = req.body
             const userId = req.user._id;
-            // const wallet = await WalletModel.findOne({user: userId})
-            // if(!wallet || wallet.balance < amount){
-            //     throw new httpError.BadRequest(WalletMsg.NoBalance)
-            // }
-
-            
-
-            
             const updatedWallet = await WalletModel.findOneAndUpdate(
                 {user: userId},
-                {
-                    $inc: {balance: -amount},
-                    // $push: {
-                    //     transaction: {
-                    //         amount,
-                    //         type: 'withdrawal',
-                    //         status: 'completed',
-                    //         currency
-                    //     }
-                    // }
-                },
+                {$inc: {balance: -amount}},
                 {new: true}
             )
                 if(!updatedWallet || updatedWallet.balance < amount){
@@ -95,7 +79,9 @@ class WalletController{
                     type: 'withdrawal',
                     status: 'completed',
                     currency: updatedWallet.currency,
-                    description: 'funds withdrawn from wallet'
+                    description: 'funds withdrawn from wallet',
+                    order: null,
+                    user: userId
                 })
 
                 await transaction.save()
@@ -104,13 +90,7 @@ class WalletController{
             const responseWallet = {
                 _id: updatedWallet._id,
                 balance: updatedWallet.balance,
-                currency: updatedWallet.currency,
-                // transaction: updatedWallet.transaction.map((txn) =>({
-                //     amount: txn.amount,
-                //     type: txn.type,
-                //     status: txn.status,
-                //     currency: txn.currency,
-                // }))
+                currency: updatedWallet.currency
             }
 
             return sendResponse(res, StatusCodes.OK, WalletMsg.WithdrawnFund, {wallet: responseWallet})

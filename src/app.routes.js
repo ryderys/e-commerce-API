@@ -8,6 +8,7 @@ const { RbacRoutes } = require("./modules/RBAC/rbac.routes");
 const { ReportRoutes } = require("./modules/reports/reports.routes");
 const { ReviewRoutes } = require("./modules/reviews/reviews.routes");
 const { SavedItemRoutes } = require("./modules/savedItems/savedItem.routes");
+const { TransactionRoutes } = require("./modules/transaction/transaction.routes");
 const { UserRoutes } = require("./modules/user/user.routes");
 const { WalletRoutes } = require("./modules/wallet/wallet.routes");
 
@@ -26,6 +27,7 @@ mainRouter.use('/rbac', RbacRoutes)
 mainRouter.use('/user', UserRoutes)
 mainRouter.use('/user', UserRoutes)
 mainRouter.use('/wallet', WalletRoutes)
+mainRouter.use('/transaction', TransactionRoutes)
 module.exports = {
     mainRouter
 }

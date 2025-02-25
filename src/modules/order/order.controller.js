@@ -96,7 +96,9 @@ class OrderController {
                 status: 'completed',
                 currency: userWallet.currency,
                 order: order._id,
-                description: `payment for order ${order._id}`
+                description: `payment for order ${order._id}`,
+                user: userId
+
             })
             await transaction.save()
 
@@ -186,7 +188,8 @@ class OrderController {
                     status: 'completed',
                     currency: userWallet.currency,
                     description: `refund for canceled order ${order._id}`,
-                    order: order._id
+                    order: order._id,
+                    user: userId
                 })
                 await refundTransaction.save()
                 await userWallet.save()
