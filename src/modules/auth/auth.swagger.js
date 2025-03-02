@@ -16,7 +16,7 @@
  *                  mobile:
  *                      type: string
  *                      description: Mobile number following pattern 09XXXXXXXXX
- *                      example: 09123456789
+ *                      example: "09123456789"
  *          CheckOTPRequest:
  *              type: object
  *              required: ["mobile", "code"]
@@ -95,13 +95,13 @@
  *              description: otp created successfully
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          $ref: '#/components/schemas/OTPSuccessResponse'
  *          400:
  *              description: Bad Request
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          $ref: '#/components/schemas/ErrorResponse'
  */
 
@@ -125,13 +125,13 @@
  *              description: login success
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          $ref: '#/components/schemas/LoginSuccessResponse'
  *          400:
  *              description: Invalid OTP or other client error
  *              content:
  *                  application/json:
- *                      schemas:
+ *                      schema:
  *                          $ref: '#/components/schemas/ErrorResponse'
  */
 

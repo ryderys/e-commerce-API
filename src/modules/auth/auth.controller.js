@@ -59,13 +59,11 @@ class UserAuthController {
     }
 
     async checkOTP(req, res, next) {
-        // const session = await UserModel.startSession()
-        // session.startTransaction()
         try {
             await checkOtpSchema.validateAsync(req.body);
             const {mobile, code} = req.body;
 
-            const user = await UserModel.findOne({mobile}); // query is a session 
+            const user = await UserModel.findOne({mobile}); 
             if(!user) throw new httpErrors.BadRequest(AuthMSG.UserNotFound)
             
             if(!user.otp) throw new httpErrors.BadRequest(AuthMSG.OTPNotFound)
@@ -81,18 +79,18 @@ class UserAuthController {
             }
 
             if(user.roles.length === 0){
-                const guestRole = await RoleModel.findOne({role: 'guest'}).select('_id')
+                const userRole = await RoleModel.findOne({role: 'user'}).select('_id')
 
-                if(!guestRole){
-                    const newGuestRole = new RoleModel({
-                        role: 'guest',
+                if(!userRole){
+                    const newUserRole = new RoleModel({
+                        role: 'user',
                         permissions: [],
                         inherits: []
                     })
-                    await newGuestRole.save()
-                    user.roles.push(newGuestRole._id)
+                    await newUserRole.save()
+                    user.roles = [newUserRole._id]
                 } else {
-                    user.roles.push(guestRole._id)
+                    user.roles = [userRole._id]
                 }
             }
             const accessToken = signToken.signAccessToken({mobile, id: user._id})
@@ -104,12 +102,8 @@ class UserAuthController {
             await user.save() // save as a session
 
             setToken(res, accessToken, refreshToken)
-            // await session.commitTransaction()
-            // session.endSession()
             return sendResponse(res, StatusCodes.OK, AuthMSG.LoginSuccess, {accessToken, refreshToken})
         } catch (error) {
-            // await session.abortTransaction()
-            // session.endSession()
             next(error)
         }
     }

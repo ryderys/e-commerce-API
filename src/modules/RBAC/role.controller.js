@@ -60,8 +60,7 @@ class RoleController{
         try {
             const {roleId} = req.params;
 
-            const role = await RoleModel.findById(roleId).populate('permissions', 'resource action scope')
-            .populate('inherits')
+            const role = await RoleModel.findById(roleId).populate('permissions')
 
             if(!role) throw httpError.NotFound(RbacMsg.RoleNFound)
 

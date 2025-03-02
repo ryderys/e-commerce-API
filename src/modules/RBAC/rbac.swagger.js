@@ -72,6 +72,76 @@
  *                      items:
  *                          type: string
  *                          description: A list of permission ObjectIds to be assigned to the role.
+ *          permissionOperation:
+ *              type: object
+ *              required: 
+ *                  -   action
+ *              properties:
+ *                  action:
+ *                      type: string
+ *                      enum: [create, read, update, delete]
+ *                      example: read
+ *                  scope:
+ *                      type: string
+ *                      enum: [global, own]
+ *                      default: global
+ *                      example: global
+ *          createPermissionRequest:
+ *              type: object
+ *              required:
+ *                  -   resource
+ *                  -   operations
+ *              properties:
+ *                  resource:
+ *                      type: string
+ *                      enum: [product, review, category, features ,order, savedItems, user, cart, report, transaction, wallet]
+ *                      example: savedItems
+ *                  operations:
+ *                      type: array
+ *                      items:
+ *                          $ref: '#/components/schemas/permissionOperation'
+ *                      example:
+ *                          -   action: create
+ *                              scope: global
+ *                          -   action: read
+ *                              scope: own
+ *          createPermissionRequestForm:
+ *              type: object
+ *              properties:
+ *                  resource:
+ *                      type: string
+ *                      enum: [product, review, category, features, order, savedItems, user, cart, report, transaction,wallet]
+ *                      description: The resource for which the permission is being created or updated.
+ *                  operations:
+ *                      type: array
+ *                      items:
+ *                          type: object
+ *                          properties:
+ *                              action:
+ *                                  type: string
+ *                                  enum: [create, read, update, delete]
+ *                                  description: The action that the user is allowed to perform on the resource.
+ *                              scope:
+ *                                  type: string
+ *                                  enum: [global, own]
+ *                                  default: global
+ *                                  description: The scope of the permission (global or own).
+ *          permissionResponse:
+ *              type: object
+ *              properties:
+ *                  _id:
+ *                      type: string
+ *                  resource:
+ *                      type: string
+ *                      example: savedItems
+ *                  operation:
+ *                      type: array
+ *                      items:
+ *                          $ref: '#/components/schemas/permissionOperation'
+ *                  createdAt:
+ *                      type: string
+ *                      format: date-time
+ *              
  *                  
  */
 
@@ -220,13 +290,20 @@
  *          content:
  *              application/x-www-form-urlencoded:
  *                  schema:
- *                      $ref: '#/components/schemas/addPermission'
+ *                      $ref: '#/components/schemas/createPermissionRequestForm'
  *              application/json:
  *                  schema:
- *                      $ref: '#/components/schemas/addPermission'
+ *                      $ref: '#/components/schemas/createPermissionRequest'
  *      responses:
  *          201:
  *              description: role created successfully
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              newPermission:
+ *                                  $ref: '#/components/schemas/permissionResponse'
  *              
  *      
  */

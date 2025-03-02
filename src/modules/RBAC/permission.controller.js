@@ -31,34 +31,91 @@ class PermissionController{
         }
     }
     // PERMISSION MANAGEMENT
-    async createPermission(req, res, next){
+    // async createPermission(req, res, next){
+    //     try {
+    //         const {resource, action, scope} = req.body;
+    //         const actionsArray = Array.isArray(action) ? action : action.split(',').map(a => a.trim());
+    //         const newPermission = new PermissionModel({
+    //             resource,
+    //             action: actionsArray,
+    //             scope
+    //         })
+    //         await newPermission.save()
+    //         return sendResponse(res, StatusCodes.CREATED, RbacMsg.PermissionCreated, {newPermission})
+    //     } catch (error) {
+    //         next(error)
+    //     }
+    // }
+
+    async createPermission(req, res, next) {
         try {
-            const {resource, action, scope} = req.body;
-            const actionsArray = Array.isArray(action) ? action : action.split(',').map(a => a.trim());
+            const { resource, operations } = req.body;
+            const operationsArray = JSON.parse(operations)
+            console.log(operationsArray)
+            // Validate operations format
+            console.log(req.body)
+            const isValidOperations = Array.isArray(operationsArray) && 
+            operationsArray.every(op => op.action);
+            
+            if (!isValidOperations) {
+                throw new httpError.BadRequest('Invalid operations format');
+            }
+    
+            // Check for existing permissions for this resource
+            const existingPermission = await PermissionModel.findOne({ resource });
+            if (existingPermission) {
+                // Merge new operations with existing ones
+                const updatedOperations = [...existingPermission.operations, ...operations]
+                    .filter((op, index, self) =>
+                        self.findIndex(o => 
+                            o.action === op.action && 
+                            o.scope === op.scope
+                        ) === index
+                    );
+                
+                existingPermission.operations = updatedOperations;
+                await existingPermission.save();
+                return sendResponse(res, StatusCodes.OK, 'Permission updated', { permission: existingPermission });
+            }
+    
+            // Create new permission document
             const newPermission = new PermissionModel({
                 resource,
-                action: actionsArray,
-                scope
-            })
-            await newPermission.save()
-            return sendResponse(res, StatusCodes.CREATED, RbacMsg.PermissionCreated, {newPermission})
+                operations
+            });
+            
+            await newPermission.save();
+            return sendResponse(res, StatusCodes.CREATED, RbacMsg.PermissionCreated, { permission: newPermission });
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
+
+    //  Get permissions from roles with inheritance
+        async getRolePermissions(roleIds) {
+            const roles = await RoleModel.find({ _id: { $in: roleIds } })
+                .populate({
+                    path: 'permissions',
+                    populate: { path: 'inherits' }
+                });
+
+            return roles.flatMap(role => 
+                role.permissions.concat(
+                    role.inherits.flatMap(inherited => inherited.permissions)
+                )
+            );
+        }
     
     async assignPermissionsToRole(req, res, next){
         try {
             const {roleId} = req.params;
             const {permissions} = req.body;
 
+            const permissionIds = Array.isArray(permissions) ? permissions : permissions.split(',')
             // Step 1: Validate the permissions - make sure they exist in the Permission model
-            const validPermissions = await PermissionModel.find({_id: {$in: permissions}})
+            const validPermissions = await PermissionModel.find({_id: {$in: permissionIds}})
             // const validPermissions = await PermissionModel.find({_id: {$in: permissions}})
             
-            
-
-
             // If some permissions don't exist in the database, return an error
             if(!validPermissions){
                 throw new httpError.BadRequest(RbacMsg.InvalidPermission)
