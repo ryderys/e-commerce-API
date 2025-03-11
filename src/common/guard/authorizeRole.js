@@ -15,8 +15,12 @@ const adminAuthMiddleware = async(req, res, next) => {
                 __v:0,
                 updatedAt:0,
                 verifiedMobile:0
-            }).lean()
-            if(!user || user.roles !== 'admin') throw new httpErrors.Unauthorized('admin access only')
+            }).populate("roles").populate("inherits")
+            console.log(user.roles)
+            const isAdmin = user.roles.some(role => 
+            role.name === 'admin' || role.inherits.some(inheritedRole => inheritedRole.name === 'admin'))
+            console.log(isAdmin)
+            if(!user || !isAdmin) throw new httpErrors.Unauthorized('admin access only')
             req.user = user
             return next()
             }

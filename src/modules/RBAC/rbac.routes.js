@@ -8,28 +8,41 @@ RbacRoutes.post("/roles/create", RoleController.createRole)
 
 RbacRoutes.get("/roles", RoleController.getAllRoles)
 
-RbacRoutes.get("/roles/:roleId", RoleController.getRoleDetails)
+RbacRoutes.get("/roles/:roleId", RoleController.getRoleById)
+
 RbacRoutes.delete("/roles/:roleId", RoleController.deleteRole)
 
-RbacRoutes.put("/roles/:roleId/assign", RoleController.assignRoleToUser)
+RbacRoutes.get("/roles/users/:roleId", RoleController.getUsersWithRole)
 
-RbacRoutes.put("/roles/inheritance/:roleId", RoleController.addInheritedRole)
+RbacRoutes.post("/roles/:roleId/assign/:userId", RoleController.assignRoleToUser)
+RbacRoutes.post("/roles/:roleId/revoke/:userId", RoleController.revokeRoleFromUser)
 
-RbacRoutes.get("/roles/permissions/:roleId", RoleController.getRolePermission)
+// RbacRoutes.put("/roles/inheritance/:roleId", RoleController.addInheritedRole)
 
+// RbacRoutes.get("/roles/permissions/:roleId", RoleController.getRolePermission)
+
+// PERMISSIONS
 
 RbacRoutes.post("/permissions/create", PermissionController.createPermission)
 
-RbacRoutes.put("/permissions/assign/:roleId", PermissionController.assignPermissionsToRole)
-
 RbacRoutes.get("/permissions", PermissionController.getAllPermissions)
 
+RbacRoutes.get("/permissions/:permissionId", PermissionController.getPermissionById)
 
-RbacRoutes.delete("/permission/:permissionId", PermissionController.deletePermission)
-RbacRoutes.put("/permission/:roleId", PermissionController.updateRolePermissions)
+RbacRoutes.patch("/permissions/:permissionId", PermissionController.updatePermission)
+
+RbacRoutes.delete("/permissions/:permissionId", PermissionController.deletePermission)
+
+
+// RbacRoutes.put("/permissions/assign/:roleId", PermissionController.assignPermissionsToRole)
+
+
+
+// RbacRoutes.put("/permissions/:roleId", PermissionController.updateRolePermissions)
 
 
 RbacRoutes.post("/grant-direct-permission", PermissionController.grantDirectPermissions)
+RbacRoutes.post("/revoke-direct-permission", PermissionController.revokeDirectPermissions)
 
 
 

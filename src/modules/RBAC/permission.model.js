@@ -1,20 +1,14 @@
 const { default: mongoose } = require("mongoose");
+const APP_RESOURCES = require("../../common/constants/resources");
+
 
 const PermissionSchema = new mongoose.Schema({
-    resource: {type: String, required: true, enum: ['product', 'review', 'category', 'features', 'order', 'cart', 'savedItems', 'user', 'report', 'transaction', 'wallet']}, //e.g product, order ...
-    operations: {
-        type: [{
-            action: {type: String, enum: ['create', 'read', 'update', 'delete'], required: true},
-            scope: {type: String, enum: ['global', 'own'], default: 'global'}
-        }],
-        required: true
-    }
-}, {
-    toJSON: {
-        virtuals: true
-    },
-    versionKey: false
-})
+    resource: {type: String, enum: Object.values(APP_RESOURCES), required: true},
+    actions: [{type: String, required: true}],
+    // scope: {type: String, enum: ['global', 'own'] ,default: 'global'},
+    description: {type: String, required: false},
+}, {versionKey: false, timestamps: true});
+
 
 module.exports = {
     PermissionModel: mongoose.model("Permission", PermissionSchema)

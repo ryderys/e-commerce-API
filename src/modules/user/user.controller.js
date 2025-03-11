@@ -136,8 +136,8 @@ class UserController{
             next(error);
         }
     }
-    
 
+    
     async getAllUsers(req, res, next){
         try {
             const { page = 1, limit = 10} = req.query

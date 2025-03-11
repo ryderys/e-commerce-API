@@ -5,146 +5,30 @@ const { sendResponse } = require("../../common/utils/helperFunctions");
 const { RbacMsg } = require("./rbac.msg");
 const { PermissionModel } = require("./permission.model");
 const { UserModel } = require("../user/user.model");
+const APP_RESOURCES = require("../../common/constants/resources");
 
 class PermissionController{
 
     // ROLE MANAGEMENT
 
-    async updateRolePermissions(req, res, next){
-        try {
-            // const {error} = roleSchema.validate(req.body)
-            // if(error){
-            //     throw new httpError(error.message)
-            // }
-            
-            const { roleId } = req.params
-            const {permissionIds} = req.body;
-            
-            const updatedRole = await RoleModel.findOneAndUpdate(roleId, 
-                { $set: {permissions: permissionIds}},
-                { new: true, runValidators: true}
-            ).populate('permissions', 'resource action scope')
-            if(!updatedRole) throw new httpError.BadRequest(RbacMsg.PermissionNUpdated)
-            return sendResponse(res, StatusCodes.OK, RbacMsg.PermissionUpdated)
-        } catch (error) {
-            next(error)
-        }
-    }
-    // PERMISSION MANAGEMENT
-    // async createPermission(req, res, next){
-    //     try {
-    //         const {resource, action, scope} = req.body;
-    //         const actionsArray = Array.isArray(action) ? action : action.split(',').map(a => a.trim());
-    //         const newPermission = new PermissionModel({
-    //             resource,
-    //             action: actionsArray,
-    //             scope
-    //         })
-    //         await newPermission.save()
-    //         return sendResponse(res, StatusCodes.CREATED, RbacMsg.PermissionCreated, {newPermission})
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
-
     async createPermission(req, res, next) {
         try {
-            const { resource, operations } = req.body;
-            const operationsArray = JSON.parse(operations)
-            console.log(operationsArray)
-            // Validate operations format
-            console.log(req.body)
-            const isValidOperations = Array.isArray(operationsArray) && 
-            operationsArray.every(op => op.action);
-            
-            if (!isValidOperations) {
-                throw new httpError.BadRequest('Invalid operations format');
-            }
-    
-            // Check for existing permissions for this resource
-            const existingPermission = await PermissionModel.findOne({ resource });
-            if (existingPermission) {
-                // Merge new operations with existing ones
-                const updatedOperations = [...existingPermission.operations, ...operations]
-                    .filter((op, index, self) =>
-                        self.findIndex(o => 
-                            o.action === op.action && 
-                            o.scope === op.scope
-                        ) === index
-                    );
-                
-                existingPermission.operations = updatedOperations;
-                await existingPermission.save();
-                return sendResponse(res, StatusCodes.OK, 'Permission updated', { permission: existingPermission });
+            const { resource, actions, description } = req.body;
+            if(!Object.values(APP_RESOURCES).includes(resource)){
+                return sendResponse(res, StatusCodes.BAD_REQUEST, RbacMsg.InvalidResource, null)
             }
     
             // Create new permission document
             const newPermission = new PermissionModel({
                 resource,
-                operations
+                actions,
+                description
             });
             
             await newPermission.save();
             return sendResponse(res, StatusCodes.CREATED, RbacMsg.PermissionCreated, { permission: newPermission });
         } catch (error) {
             next(error);
-        }
-    }
-
-    //  Get permissions from roles with inheritance
-        async getRolePermissions(roleIds) {
-            const roles = await RoleModel.find({ _id: { $in: roleIds } })
-                .populate({
-                    path: 'permissions',
-                    populate: { path: 'inherits' }
-                });
-
-            return roles.flatMap(role => 
-                role.permissions.concat(
-                    role.inherits.flatMap(inherited => inherited.permissions)
-                )
-            );
-        }
-    
-    async assignPermissionsToRole(req, res, next){
-        try {
-            const {roleId} = req.params;
-            const {permissions} = req.body;
-
-            const permissionIds = Array.isArray(permissions) ? permissions : permissions.split(',')
-            // Step 1: Validate the permissions - make sure they exist in the Permission model
-            const validPermissions = await PermissionModel.find({_id: {$in: permissionIds}})
-            // const validPermissions = await PermissionModel.find({_id: {$in: permissions}})
-            
-            // If some permissions don't exist in the database, return an error
-            if(!validPermissions){
-                throw new httpError.BadRequest(RbacMsg.InvalidPermission)
-            }
-            // Step 2: Find the role by ID
-            const role = await RoleModel.findById(roleId).populate('permissions').populate('inherits')
-            if(!role) throw httpError.NotFound(RbacMsg.RoleNFound)
-
-            // Step 3: Check and assign permissions to the role
-            // Add the valid permissions (using ObjectIds) to the role
-            role.permissions = [...new Set([...role.permissions.map(p => p._id), ...validPermissions.map(p => p._id)])]
-            
-            // Step 4: Handle role inheritance
-            // If the role inherits from other roles, include their permissions as well
-            const inheritedPermissions = []
-            for (const inheritedRole of role.inherits) {
-                const inheritedRoleData = await RoleModel.findById(inheritedRole).populate('permissions')
-                inheritedPermissions.push(...inheritedRoleData.permissions)
-            }
-
-            // Add inherited permissions to the role (avoiding duplicates)
-            role.permissions = [...new Set([...role.permissions, ...inheritedPermissions.map(p => p._id)])]
-
-            // Step 5: Save the updated role
-            await role.save()
-
-            return sendResponse(res, StatusCodes.OK, RbacMsg.PermissionAssigned, {role})
-        } catch (error) {
-            next(error)
         }
     }
 
@@ -158,6 +42,33 @@ class PermissionController{
         }
     }
 
+    async getPermissionById(req, res, next){
+        try {
+            const {permissionId} = req.params;
+            const permission = await PermissionModel.findById(permissionId)
+            if(!permission) throw new httpError.NotFound(RbacMsg.PermissionNFound)
+            return sendResponse(res, StatusCodes.OK, null, {permission})
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async updatePermission(req, res, next){
+        const {resource, scope} = req.body;
+        const {permissionId} = req.params;
+
+        if(resource && !Object.values(APP_RESOURCES).includes(resource)){
+            return sendResponse(res, StatusCodes.BAD_REQUEST, RbacMsg.InvalidResource, null)
+        }
+        const permission = await PermissionModel.findByIdAndUpdate(permissionId, {
+            resource,
+            scope
+        }, {new: true})
+
+        if(!permission) throw new httpError.NotFound(RbacMsg.PermissionNFound)
+        return sendResponse(res, StatusCodes.OK, RbacMsg.PermissionUpdated, {permission})
+    } 
+
     async deletePermission(req, res, next){
         try {
             const {permissionId} = req.params;
@@ -165,24 +76,40 @@ class PermissionController{
             const permission = await PermissionModel.findById(permissionId)
             if(!permission) throw new httpError.NotFound(RbacMsg.PermissionNFound)
             
-            const rolesWithPermission = await RoleModel.find({'permissions': permissionId})
-            if(rolesWithPermission.length > 0){
-                await RoleModel.updateMany(
-                    {'permissions': permissionId},
+            await Promise.all([
+                RoleModel.updateMany(
+                    {permissions: permissionId},
                     { $pull: {permissions: permissionId}}
+                ),
+                UserModel.updateMany(
+                    {directPermissions: permissionId},
+                    {$pull: {directPermissions: permissionId}}
                 )
-            }
+            ])
 
-            const usersWithPermission = await UserModel.find({'directPermissions': permissionId})
-            if(usersWithPermission.length > 0){
-                await UserModel.updateMany(
-                    {'directPermissions': permissionId},
-                    {$pull: {'directPermissions': permissionId}}
-                )
-            }
-
-            await PermissionModel.findByIdAndDelete(permissionId)
+            const deletedPermission = await PermissionModel.findByIdAndDelete(permissionId)
+            if(!deletedPermission) throw new httpError.NotFound(RbacMsg.PermissionAlreadyDeleted)
             return sendResponse(res, StatusCodes.OK, RbacMsg.PermissionDeleted)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async addPermissionsToRole(req, res, next){
+        try {
+            const {permissionIds} = req.body;
+            const {roleId} = req.params;
+            const validPermissions = await PermissionModel.countDocuments({_id: {$in: permissionIds}})
+            if(permissionIds.length !== validPermissions){
+                return sendResponse(res, StatusCodes.BAD_REQUEST, RbacMsg.InvalidPermission)
+            }
+            const role = await RoleModel.findByIdAndUpdate(roleId, {
+                $addToSet: {permissions: {$each: permissionIds}}
+            }, {new: true}).populate('permissions');
+
+            if(!role) throw new httpError.NotFound(RbacMsg.RoleNFound)
+
+            return sendResponse(res, StatusCodes.OK, RbacMsg.PermissionAssigned, {role})
         } catch (error) {
             next(error)
         }
@@ -191,24 +118,46 @@ class PermissionController{
     // assigning specific permissions directly to a user, bypassing role-based permissions
     async grantDirectPermissions(req, res, next){
         try {
-            // const {error} = GrantPermissionSchema.validate(req.body)
-            // if(error) throw new httpError(error.message)
-            const {userId, permissionIds} = req.body;
-            console.log(permissionIds)
-            // if (!Array.isArray(permissionIds) || permissionIds.length === 0){
-            //     throw new httpError.BadRequest("Permissions must be a non-empty array.")
-            // }
-            const user = await UserModel.findByIdAndUpdate(userId, {
-                $addToSet: {directPermissions: permissionIds}
-            }, {new: true})
+           
+            const {userId, permissionId} = req.body;
+            const permission = await PermissionModel.findById(permissionId);
+            if(!permission) throw new httpError.NotFound(RbacMsg.PermissionNFound)
+
+            const user = await UserModel.findById(userId)
             if(!user) throw new httpError.BadRequest(RbacMsg.UserNFound)
             
+            if(user.directPermissions.some(p => p.equals(permissionId))){
+                throw new httpError.Conflict(RbacMsg.PermissionAlreadyGranted)
+            }
+
+            const updateUser = await UserModel.findByIdAndUpdate(userId,
+                {$addToSet: {directPermissions: permissionId}},
+                {new: true}
+            ).select('directPermissions roles')
             
-            return sendResponse(res, StatusCodes.OK, 'permissions for this user updated successfully')
+            return sendResponse(res, StatusCodes.OK, RbacMsg.PermissionGranted)
         } catch (error) {
             next(error)
         }
     }
+    async revokeDirectPermissions(req, res, next){
+        try {
+           
+            const {userId, permissionId} = req.body;
+
+            const updateUser = await UserModel.findByIdAndUpdate(userId,
+                {$pull: {directPermissions: permissionId}},
+                {new: true}
+            ).select('directPermissions roles')
+            if(!updateUser) throw new httpError.NotFound(RbacMsg.UserNFound)
+            
+            return sendResponse(res, StatusCodes.OK, RbacMsg.PermissionGranted, null)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    
 
    
 }

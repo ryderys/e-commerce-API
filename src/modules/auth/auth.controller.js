@@ -50,7 +50,7 @@ class UserAuthController {
             return sendResponse(res, StatusCodes.OK, AuthMSG.OTPSuccess, {code: rawOTP, mobile: user.mobile})
         } 
             //create new user with OTP
-            const newUser = await UserModel.create({mobile, otp, lastOtpRequest: new Date()});
+            const newUser = await UserModel.create({mobile, username:`user_${mobile}`, otp, lastOtpRequest: new Date()});
             return sendResponse(res, StatusCodes.CREATED, AuthMSG.OTPSuccess, {code: rawOTP, mobile: newUser.mobile})
 
        } catch (error) {
@@ -78,21 +78,21 @@ class UserAuthController {
                 user.verifiedMobile = true
             }
 
-            if(user.roles.length === 0){
-                const userRole = await RoleModel.findOne({role: 'user'}).select('_id')
+            // if(user.roles.length === 0){
+            //     const userRole = await RoleModel.findOne({role: 'user'}).select('_id')
 
-                if(!userRole){
-                    const newUserRole = new RoleModel({
-                        role: 'user',
-                        permissions: [],
-                        inherits: []
-                    })
-                    await newUserRole.save()
-                    user.roles = [newUserRole._id]
-                } else {
-                    user.roles = [userRole._id]
-                }
-            }
+            //     if(!userRole){
+            //         const newUserRole = new RoleModel({
+            //             role: 'user',
+            //             permissions: [],
+            //             inherits: []
+            //         })
+            //         await newUserRole.save()
+            //         user.roles = [newUserRole._id]
+            //     } else {
+            //         user.roles = [userRole._id]
+            //     }
+            // }
             const accessToken = signToken.signAccessToken({mobile, id: user._id})
             const refreshToken = signToken.signRefreshToken({mobile, id: user._id})
 

@@ -13,14 +13,14 @@ const UserSchema = new mongoose.Schema({
         type: String,
         lowercase: true,
         trim: true,
-        unique: true
+        sparse: true
     },
     email: {
         type: String,
         lowercase: true,
         trim: true,
-        unique: true,
-        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        required: false
     },
     mobile: {
         type: String,
