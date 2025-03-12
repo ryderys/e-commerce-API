@@ -42,8 +42,7 @@ A robust Node.js backend API for an e-commerce platform featuring Role-Based Acc
    ```env
       PORT=3000
       BASE_URL=http://localhost
-      MONGO_URI="mongodb://127.0.0.1:27017/e-commerceAPI"
-      MONGO_SEED_URI="mongodb://127.0.0.1:27017/e-commerce-seed"
+      MONGO_URI="your mongodb url"
       NODE_ENV="development"
       REFRESH_TOKEN_SECRET="someverysecretrefreshtoken"
       ACCESS_TOKEN_SECRET="someverysecretaccesstoken"
