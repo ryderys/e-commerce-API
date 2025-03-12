@@ -11,7 +11,7 @@ OrderRoutes.get("/", Authentication, checkPermissions(APP_RESOURCES.Order, 'read
 
 OrderRoutes.get("/:orderId", Authentication, checkPermissions(APP_RESOURCES.Order, 'readOwn'),OrderController.getOrderDetails)
 OrderRoutes.patch("/:orderId/cancel", Authentication, checkPermissions(APP_RESOURCES.Order, 'updateOwn'),OrderController.cancelOrder)
-OrderRoutes.patch("/:orderId/status", adminAuthMiddleware, checkPermissions(APP_RESOURCES.Order, 'updateOwn'),OrderController.updateOrderStatus) //admin only
+OrderRoutes.patch("/:orderId/status", adminAuthMiddleware, checkPermissions(APP_RESOURCES.Order, 'update'),OrderController.updateOrderStatus) //admin only
 
 module.exports = {
     OrderRoutes

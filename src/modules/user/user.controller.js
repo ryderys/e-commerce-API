@@ -47,7 +47,7 @@ class UserController{
                 verifiedMobile: user.verifiedMobile,
                 email: user.email,
                 fullName: user.fullName,
-                username: user.userName,
+                username: user.username,
                 roles: user.roles,
                 permissions: user.directPermissions,
                 createdAt: user.createdAt,

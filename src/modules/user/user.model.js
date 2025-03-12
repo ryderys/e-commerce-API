@@ -50,7 +50,7 @@ const UserSchema = new mongoose.Schema({
         default: []
     }],
 
-}, {timestamps: true, versionKey: false})
+}, {timestamps: true, versionKey: false, virtuals: true})
 
 
 

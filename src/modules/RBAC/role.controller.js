@@ -31,7 +31,7 @@ class RoleController{
 
     async getAllRoles(req, res, next){
         try {
-            const roles = await RoleModel.find().populate('permissions').populate('inherits', 'name')
+            const roles = await RoleModel.find()``
             if(!roles) throw new httpError.NotFound(RbacMsg.RoleNFound)
             return sendResponse(res, StatusCodes.OK, null, {roles})
         } catch (error) {

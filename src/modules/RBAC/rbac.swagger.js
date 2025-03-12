@@ -21,7 +21,6 @@
  *                      items:
  *                          type: string
  *                          description: permissions ids to assign to the role
- *                          example: ['', '']
  *                  inherits:
  *                      type: string
  *                      description: the role id to be inherited from
@@ -29,24 +28,21 @@
  *                  description:
  *                      type: string
  *                      description: role description
- *                      
- *                      
  *          addPermission:
  *              type: object
  *              properties:
  *                  resource:
  *                      type: string
- *                      example: 'product'
- *                  action:
+ *                      example: "product"
+ *                  actions:
+ *                      type: array
+ *                      items:
+ *                          type: string
+ *                          example: "create, deleteOwn"
+ *                  description:
  *                      type: string
- *                      description: A comma-separated list of actions for the resource
- *                      example: 'create, read, delete, update'
+ *                      description: a summary for the permission
  *                          
- *                  scope:
- *                      type: string
- *                      enum:
- *                          -   own
- *                          -   global
  *          updatePermission:
  *              type: object
  *              properties:
@@ -68,25 +64,6 @@
  *                  permissionId:
  *                      type: string
  *                      description: A permission Id to be assigned to a user.
- *          createPermissionRequest:
- *              type: object
- *              required:
- *                  -   resource
- *                  -   operations
- *              properties:
- *                  resource:
- *                      type: string
- *                      example: 'product'
- *                      description: The resource for which the permission is being created.
- *                  actions:
- *                      type: array
- *                      items:
- *                          type: string
- *                          description: The actions that the user is allowed to perform on the resource.
- *                  description:
- *                      type: string
- *                      example: 'permission to access own cart'
- *                      description: 'a summary of the permission'
  *              
  *  
  */
@@ -215,27 +192,24 @@
  *              description: role assigned to user successfully 
  */
 
-
-
-
-
 /**
  * @swagger
  * /rbac/permissions/create:
  *  post:
- *      summary: create a new permission
+ *      summary: create a permission
  *      tags: [RBAC]
  *      requestBody:
  *          required: true
  *          content:
  *              application/x-www-form-urlencoded:
  *                  schema:
- *                      $ref: '#/components/schemas/createPermissionRequest'
+ *                      $ref: '#/components/schemas/addPermission'
  *      responses:
  *          201:
- *              description: permission created successfully              
- *      
+ *              description: created permission
  */
+
+
 
 /**
  * @swagger

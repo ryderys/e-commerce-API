@@ -78,21 +78,21 @@ class UserAuthController {
                 user.verifiedMobile = true
             }
 
-            // if(user.roles.length === 0){
-            //     const userRole = await RoleModel.findOne({role: 'user'}).select('_id')
+            if(user.roles.length === 0){
+                const userRole = await RoleModel.findOne({role: 'user'}).select('_id')
 
-            //     if(!userRole){
-            //         const newUserRole = new RoleModel({
-            //             role: 'user',
-            //             permissions: [],
-            //             inherits: []
-            //         })
-            //         await newUserRole.save()
-            //         user.roles = [newUserRole._id]
-            //     } else {
-            //         user.roles = [userRole._id]
-            //     }
-            // }
+                if(!userRole){
+                    const newUserRole = new RoleModel({
+                        role: 'user',
+                        permissions: [],
+                        inherits: []
+                    })
+                    await newUserRole.save()
+                    user.roles = [newUserRole._id]
+                } else {
+                    user.roles = [userRole._id]
+                }
+            }
             const accessToken = signToken.signAccessToken({mobile, id: user._id})
             const refreshToken = signToken.signRefreshToken({mobile, id: user._id})
 

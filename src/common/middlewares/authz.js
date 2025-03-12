@@ -68,19 +68,26 @@ const checkPermissions = (resource, requiredAction) => {
             const user = await UserModel.findById(userId)
                 .populate({
                     path: 'roles',
-                    populate: { path: 'permissions', match: { resource } }
+                    populate:[
+                        { path: 'permissions', match: { resource } },
+                        {path: 'inherits', populate: 'permissions'}
+                        ]
                 })
                 .populate({
                     path: 'directPermissions',
                     match: { resource }
                 });
+            console.log(user)
 
-            const permissions = [
+            let permissions = [
                 ...user.directPermissions,
-                ...user.roles.flatMap(role => role.permissions)
-            ].filter(p => p);
+                ...user.roles.flatMap(role => role.permissions),
+                ...getInheritedRolePermissions(user.roles)
+            ];
 
-            // 1. Check explicit permission first
+
+          
+              // 1. Check explicit permission first
             const hasExplicitAccess = permissions.some(p => 
                 p.resource === resource && 
                 p.actions.includes(requiredAction)
@@ -107,6 +114,18 @@ const checkPermissions = (resource, requiredAction) => {
         }
     };
 };
+
+const getInheritedRolePermissions = (roles, visited = new Set()) => {
+    return roles.flatMap(role => {
+      if (visited.has(role._id)) return [];
+      visited.add(role._id);
+  
+      return [
+        ...role.permissions,
+        ...getInheritedRolePermissions(role.inherits, visited)
+      ];
+    });
+  };
 
 const isResourceOwner = async (req, resourceType, userId) => {
    try {
