@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const httpErrors = require("http-errors");
-const { ValidationMsg } = require("./validation.msg");
+const { ValidationMsg } = require("../../common/validations/validation.msg");
 const Permissions = require("../../modules/RBAC/premissions");
 const MongoIDPattern =  /^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i
 

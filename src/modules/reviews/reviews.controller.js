@@ -5,7 +5,7 @@ const {ProductModel} = require("../products/product.model");
 const { sendResponse } = require("../../common/utils/helperFunctions");
 const { StatusCodes } = require("http-status-codes");
 const { default: mongoose } = require("mongoose");
-const { addReviewSchema, getReviewSchema, deleteReviewSchema, updateReviewSchema } = require("../../common/validations/reviews.validation");
+const { addReviewSchema, getReviewSchema, deleteReviewSchema, updateReviewSchema } = require("./reviews.validation");
 class ReviewController{
 
     

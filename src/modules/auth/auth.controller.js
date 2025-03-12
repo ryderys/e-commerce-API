@@ -1,4 +1,4 @@
-const { getOtpSchema, checkOtpSchema } = require("../../common/validations/auth.validation");
+
 const { UserModel } = require("../user/user.model")
 const httpErrors = require("http-errors");
 const { AuthMSG } = require("./auth.msg");
@@ -7,6 +7,7 @@ const {sendResponse, verifyRefreshToken, signToken, hashingUtils, setToken } = r
 const crypto = require("crypto");
 const CookieNames = require("../../common/constants/cookieEnum");
 const { RoleModel } = require("../RBAC/roles.model");
+const { getOtpSchema, checkOtpSchema } = require("./auth.validation");
 
 class UserAuthController {
     async getOTP(req, res, next) {

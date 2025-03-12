@@ -1,13 +1,12 @@
 const autoBind = require("auto-bind");
-const { createCategorySchema } = require("../../common/validations/category.validation");
-const { isValidObjectId, set, Types } = require("mongoose");
+const { createCategorySchema } = require("./category.validation");
+const { isValidObjectId, Types } = require("mongoose");
 const { CategoryModel } = require("./category.model");
 const httpErrors = require("http-errors");
 const { CategoryMSG } = require("./category.msg");
 const { default: slugify } = require("slugify");
 const { sendResponse, deleteCategoryAndChildren, checkCategorySlugUniqueness, checkExistCategoryById } = require("../../common/utils/helperFunctions");
 const StatusCodes = require("http-status-codes");
-const { FeaturesModel } = require("../features/features.model");
 
 class CategoryController{
     constructor(){

@@ -2,8 +2,7 @@ const autoBind = require("auto-bind");
 const { CartModel } = require("./cart.model");
 const httpErrors = require("http-errors");
 const { CartMsg } = require("./cart.msg");
-const { AddToCartSchema, RemoveFromCartSchema, QuantitySchema } = require("../../common/validations/cart.validation");
-const ObjectIdValidator = require("../../common/validations/public.validation");
+const { AddToCartSchema, RemoveFromCartSchema, QuantitySchema } = require("./cart.validation");
 const { findProductById, validateCart, expireCart, sendResponse } = require("../../common/utils/helperFunctions");
 const { StatusCodes } = require("http-status-codes");
 

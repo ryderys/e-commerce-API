@@ -2,7 +2,7 @@ const Joi = require("joi");
 const MongoIDPattern =  /^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i
 
 const httpErrors = require("http-errors");
-const { ValidationMsg } = require("./validation.msg");
+const { ValidationMsg } = require("../../common/validations/validation.msg");
 
 const createCategorySchema = Joi.object({
     title: Joi.string().min(3).max(30).error(httpErrors.BadRequest(ValidationMsg.InvalidTitle)),

@@ -5,11 +5,11 @@ const { ReviewController } = require("./reviews.controller")
 
 const ReviewRoutes = require("express").Router()
 
-ReviewRoutes.post("/products/:productId", Authentication,checkPermissions(APP_RESOURCES.Review, 'create') ,ReviewController.addReview)
-ReviewRoutes.get("/products/:productId", Authentication, checkPermissions(APP_RESOURCES.Review, 'read'),ReviewController.getReviews)
-ReviewRoutes.put("/products/:reviewId", Authentication, checkPermissions(APP_RESOURCES.Review, 'updateOwn'), ReviewController.updateReview)
+ReviewRoutes.post("/products/:productId", Authentication,checkPermissions(APP_RESOURCES.REVIEW, 'create') ,ReviewController.addReview)
+ReviewRoutes.get("/products/:productId", Authentication, checkPermissions(APP_RESOURCES.REVIEW, 'read'),ReviewController.getReviews)
+ReviewRoutes.put("/products/:reviewId", Authentication, checkPermissions(APP_RESOURCES.REVIEW, 'updateOwn'), ReviewController.updateReview)
 
-ReviewRoutes.delete("/products/:reviewId", Authentication,checkPermissions(APP_RESOURCES.Review, 'deleteOwn'), ReviewController.deleteReview)
+ReviewRoutes.delete("/products/:reviewId", Authentication,checkPermissions(APP_RESOURCES.REVIEW, 'deleteOwn'), ReviewController.deleteReview)
 
 module.exports = {
     ReviewRoutes

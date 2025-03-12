@@ -1,7 +1,7 @@
 const { CartModel } = require("../cart/cart.model");
 const httpError = require("http-errors");
 const { OrderMsg } = require("./order.msg");
-const { shippingSchema, StatusSchema } = require("../../common/validations/order.validation");
+const { shippingSchema, StatusSchema } = require("./order.validation");
 const { ProductModel } = require("../products/product.model");
 const { OrderModel } = require("./order.model");
 const { sendResponse } = require("../../common/utils/helperFunctions");

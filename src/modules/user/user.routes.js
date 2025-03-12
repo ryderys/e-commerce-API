@@ -6,10 +6,10 @@ const { UserController } = require("./user.controller")
 
 const UserRoutes = require("express").Router()
 
-UserRoutes.get("/me", Authentication, checkPermissions (APP_RESOURCES.User, 'readOwn'),UserController.getProfile)
-UserRoutes.get("/all", adminAuthMiddleware,checkPermissions (APP_RESOURCES.User, 'read'), UserController.getAllUsers) //admin access
+UserRoutes.get("/me", Authentication, checkPermissions (APP_RESOURCES.USER, 'readOwn'),UserController.getProfile)
+UserRoutes.get("/all", adminAuthMiddleware,checkPermissions (APP_RESOURCES.USER, 'read'), UserController.getAllUsers) //admin access
 
-UserRoutes.patch('/me', Authentication, checkPermissions (APP_RESOURCES.User, 'updateOwn'),UserController.updateUserProfile)
+UserRoutes.patch('/me', Authentication, checkPermissions (APP_RESOURCES.USER, 'updateOwn'),UserController.updateUserProfile)
 
 
 module.exports = {

@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const httpErrors = require("http-errors");
-const { ValidationMsg } = require("./validation.msg");
+const { ValidationMsg } = require("../../common/validations/validation.msg");
 
 const AddToCartSchema = Joi.object({
     productId: Joi.string().required().error(httpErrors.BadRequest(ValidationMsg.InvalidId)),

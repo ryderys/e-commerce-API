@@ -5,11 +5,11 @@ const { SavedItemsController } = require("./savedItems.controller")
 
 const SavedItemRoutes = require("express").Router()
 
-SavedItemRoutes.post("/save-item",Authentication, checkPermissions(APP_RESOURCES.SavedItems, 'create') ,SavedItemsController.saveItemToBookmarks)
-SavedItemRoutes.post("/add-to-cart", Authentication, checkPermissions(APP_RESOURCES.SavedItems, 'updateOwn'), SavedItemsController.addSavedItemToCart)
-SavedItemRoutes.get("/", Authentication, checkPermissions(APP_RESOURCES.SavedItems, 'readOwn'), SavedItemsController.getSavedItems)
+SavedItemRoutes.post("/save-item",Authentication, checkPermissions(APP_RESOURCES.SAVEDITEMS, 'create') ,SavedItemsController.saveItemToBookmarks)
+SavedItemRoutes.post("/add-to-cart", Authentication, checkPermissions(APP_RESOURCES.SAVEDITEMS, 'updateOwn'), SavedItemsController.addSavedItemToCart)
+SavedItemRoutes.get("/", Authentication, checkPermissions(APP_RESOURCES.SAVEDITEMS, 'readOwn'), SavedItemsController.getSavedItems)
 
-SavedItemRoutes.delete("/remove-item/:productId", Authentication, checkPermissions (APP_RESOURCES.SavedItems, 'deleteOwn'),SavedItemsController.removeSavedItem)
+SavedItemRoutes.delete("/remove-item/:productId", Authentication, checkPermissions (APP_RESOURCES.SAVEDITEMS, 'deleteOwn'),SavedItemsController.removeSavedItem)
 
 
 

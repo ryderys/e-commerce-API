@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const httpErrors = require("http-errors");
-const { ValidationMsg } = require("./validation.msg");
+const { ValidationMsg } = require("../../common/validations/validation.msg");
 const createProductSchema = Joi.object({
     title: Joi.string().min(3).max(30).error(httpErrors.BadRequest(ValidationMsg.InvalidTitle)).required(),
     description: Joi.string().error(httpErrors.BadRequest(ValidationMsg.InvalidDescription)),

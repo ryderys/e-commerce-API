@@ -1,6 +1,6 @@
 const { default: slugify } = require("slugify");
 const { checkExistCategoryById, checkExistsFeatureByCategoryAndKey, sendResponse } = require("../../common/utils/helperFunctions");
-const { createFeatureSchema, updateFeatureSchema } = require("../../common/validations/features.validation")
+const { createFeatureSchema, updateFeatureSchema } = require("./features.validation")
 const { FeaturesModel } = require("./features.model");
 const { StatusCodes } = require("http-status-codes");
 const { FeaturesMSG } = require("./features.msg");

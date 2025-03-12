@@ -3,19 +3,11 @@ const { UserMsg } = require("./user.msg");
 const { sendResponse } = require("../../common/utils/helperFunctions");
 const { StatusCodes } = require("http-status-codes");
 const { UserModel } = require("./user.model");
-const { updateProfileSchema } = require("../../common/validations/user.validation");
+const { updateProfileSchema } = require("./user.validation");
 
 
 class UserController{
-    // async getUserProfile(req, res, next){
-    //     try {
-    //         const user = await UserModel.findById(req.user._id).populate('roles')
-    //         if(!user) throw new httpError.NotFound(UserMsg.UserNFound)
-    //         return sendResponse(res, StatusCodes.OK, null, {user})
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
+   
      async getProfile(req, res, next){
         try {
             const user = await UserModel.findById(req.user._id)

@@ -5,10 +5,10 @@ const { WalletController } = require("./wallet.controller")
 
 const WalletRoutes = require("express").Router()
 
-WalletRoutes.get('/', Authentication, checkPermissions (APP_RESOURCES.Wallet, 'readOwn'),WalletController.getBalance)
+WalletRoutes.get('/', Authentication, checkPermissions (APP_RESOURCES.WALLET, 'readOwn'),WalletController.getBalance)
 
-WalletRoutes.post('/deposit', Authentication, checkPermissions (APP_RESOURCES.Wallet, 'updateOwn'), WalletController.addFunds)
-WalletRoutes.post('/withdrawal', Authentication, checkPermissions (APP_RESOURCES.Wallet, 'updateOwn'),WalletController.withdrawFunds)
+WalletRoutes.post('/deposit', Authentication, checkPermissions (APP_RESOURCES.WALLET, 'updateOwn'), WalletController.addFunds)
+WalletRoutes.post('/withdrawal', Authentication, checkPermissions (APP_RESOURCES.WALLET, 'updateOwn'),WalletController.withdrawFunds)
 
 module.exports = {
     WalletRoutes

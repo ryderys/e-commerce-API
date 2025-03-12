@@ -6,8 +6,8 @@ const { TransactionController } = require("./transaction.controller")
 
 const TransactionRoutes = require("express").Router()
 
-TransactionRoutes.get("/history", Authentication, checkPermissions (APP_RESOURCES.SavedItems, 'readOwn'), TransactionController.getTransactionHistoryByUserId)
-TransactionRoutes.get("/history/:transactionId", adminAuthMiddleware, checkPermissions (APP_RESOURCES.SavedItems, 'read'),TransactionController.getTransactionHistoryById)
+TransactionRoutes.get("/history", Authentication, checkPermissions (APP_RESOURCES.TRANSACTION, 'readOwn'), TransactionController.getTransactionHistoryByUserId)
+TransactionRoutes.get("/history/:transactionId", adminAuthMiddleware, checkPermissions (APP_RESOURCES.TRANSACTION, 'read'),TransactionController.getTransactionHistoryById)
 
 module.exports = {
     TransactionRoutes

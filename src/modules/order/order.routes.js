@@ -6,12 +6,12 @@ const { OrderController } = require("./order.controller")
 
 const OrderRoutes = require("express").Router()
 
-OrderRoutes.post("/create", Authentication, checkPermissions(APP_RESOURCES.Order, 'create'),OrderController.createOrder)
-OrderRoutes.get("/", Authentication, checkPermissions(APP_RESOURCES.Order, 'readOwn'),OrderController.getOrder)
+OrderRoutes.post("/create", Authentication, checkPermissions(APP_RESOURCES.ORDER, 'create'),OrderController.createOrder)
+OrderRoutes.get("/", Authentication, checkPermissions(APP_RESOURCES.ORDER, 'readOwn'),OrderController.getOrder)
 
-OrderRoutes.get("/:orderId", Authentication, checkPermissions(APP_RESOURCES.Order, 'readOwn'),OrderController.getOrderDetails)
-OrderRoutes.patch("/:orderId/cancel", Authentication, checkPermissions(APP_RESOURCES.Order, 'updateOwn'),OrderController.cancelOrder)
-OrderRoutes.patch("/:orderId/status", adminAuthMiddleware, checkPermissions(APP_RESOURCES.Order, 'update'),OrderController.updateOrderStatus) //admin only
+OrderRoutes.get("/:orderId", Authentication, checkPermissions(APP_RESOURCES.ORDER, 'readOwn'),OrderController.getOrderDetails)
+OrderRoutes.patch("/:orderId/cancel", Authentication, checkPermissions(APP_RESOURCES.ORDER, 'updateOwn'),OrderController.cancelOrder)
+OrderRoutes.patch("/:orderId/status", adminAuthMiddleware, checkPermissions(APP_RESOURCES.ORDER, 'update'),OrderController.updateOrderStatus) //admin only
 
 module.exports = {
     OrderRoutes

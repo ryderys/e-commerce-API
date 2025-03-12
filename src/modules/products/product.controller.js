@@ -1,6 +1,6 @@
 const autoBind = require("auto-bind");
 const path = require("path")
-const { createProductSchema, updateProductSchema } = require("../../common/validations/product.validation");
+const { createProductSchema, updateProductSchema } = require("./product.validation");
 const { ProductModel } = require("./product.model");
 const { ProductMsg } = require("./product.msg");
 const { getCategoryFeatures, convertFeaturesToObject, validateFeatures, sendResponse, deleteUploadedFiles, uploadFiles, formatProductFeatures } = require("../../common/utils/helperFunctions");
